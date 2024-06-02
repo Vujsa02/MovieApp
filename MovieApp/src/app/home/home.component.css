@@ -1,0 +1,44 @@
+mat-toolbar {
+  background-color: #3F51B5;
+}
+
+div {
+  width: 100%;
+  justify-content: flex-end;
+}
+
+button {
+  margin-right: 10px;
+  font-family: Righteous;
+}
+
+span{
+  color: white;
+}
+
+.dark_font{
+  color : black;
+}
+
+.separator {
+  background-color: #536DFE; /* color for the separator */
+  width: 1px;
+  height: 40px; /* adjust the height of the separator */
+  margin: 0 10px; /* adjust the space between buttons and separators */
+  float: right;
+}
+
+.nav-item {
+  background-color: #3F51B5;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: color 0.3s;
+  margin: 20px;
+  border-radius: 4px;
+}
+
+.nav-item:hover {
+  background-color: #536DFE; /* slightly brighter color on hover */
+}
