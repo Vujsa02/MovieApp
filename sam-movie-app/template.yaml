@@ -1,118 +1,46 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Resources:
-  S3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: movie-bucket-baki123
+Transform: AWS::Serverless-2016-10-31
 
-  DynamoDBTable:
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref MoviesTable
+
+Resources:
+  MoviesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: MovieMetadata
+      TableName: MoviesTable
       AttributeDefinitions:
-        - AttributeName: FileID
+        - AttributeName: id
           AttributeType: S
       KeySchema:
-        - AttributeName: FileID
+        - AttributeName: id
           KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+      BillingMode: PAY_PER_REQUEST
 
-  LambdaUploadFunction:
-    Type: AWS::Lambda::Function
+  UploadMovieFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      FunctionName: UploadMovie
       Handler: upload-movie.handler
-      Role: arn:aws:iam::381492024366:role/execution-role
-      Code:
-        S3Bucket: movie-bucket-baki123
-        S3Key: upload-movie.zip
-      Runtime: nodejs18.x
-      Environment:
-        Variables:
-          BUCKET_NAME: movie-bucket-baki123
-          TABLE_NAME: MovieMetadata
+      CodeUri: ../sam-movie-app/
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: post
 
-  LambdaDownloadFunction:
-    Type: AWS::Lambda::Function
+  DownloadMovieFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      FunctionName: DownloadMovie
       Handler: download-movie.handler
-      Role: arn:aws:iam::381492024366:role/execution-role
-      Code:
-        S3Bucket: movie-bucket-baki123
-        S3Key: download-movie.zip
-      Runtime: nodejs18.x
-      Environment:
-        Variables:
-          BUCKET_NAME: movie-bucket-baki123
-          TABLE_NAME: MovieMetadata
-
-  ApiGatewayRestApi:
-    Type: AWS::ApiGateway::RestApi
-    Properties:
-      Name: MovieContentApi
-
-  ApiGatewayResourceUpload:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
-      PathPart: upload
-      RestApiId: !Ref ApiGatewayRestApi
-
-  ApiGatewayResourceDownload:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
-      PathPart: download
-      RestApiId: !Ref ApiGatewayRestApi
-
-  ApiGatewayResourceDownloadFileId:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !Ref ApiGatewayResourceDownload
-      PathPart: "{fileId}"
-      RestApiId: !Ref ApiGatewayRestApi
-
-  ApiGatewayMethodUpload:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: POST
-      ResourceId: !Ref ApiGatewayResourceUpload
-      RestApiId: !Ref ApiGatewayRestApi
-      Integration:
-        IntegrationHttpMethod: POST
-        Type: AWS_PROXY
-        Uri: !Sub
-          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaUploadFunction.Arn}/invocations
-          - {}
-
-  ApiGatewayMethodDownload:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: GET
-      ResourceId: !Ref ApiGatewayResourceDownloadFileId
-      RestApiId: !Ref ApiGatewayRestApi
-      Integration:
-        IntegrationHttpMethod: GET
-        Type: AWS_PROXY
-        Uri: !Sub
-          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaDownloadFunction.Arn}/invocations
-          - {}
-
-  LambdaInvokePermissionUpload:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt LambdaUploadFunction.Arn
-      Principal: apigateway.amazonaws.com
-
-  LambdaInvokePermissionDownload:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt LambdaDownloadFunction.Arn
-      Principal: apigateway.amazonaws.com
+      CodeUri: ../sam-movie-app/
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /download/{id}
+            Method: get
