@@ -19,7 +19,7 @@ export class MovieService {
       fileContent
     };
 
-    return this.http.post<any>('https://lag81cd8c7.execute-api.eu-central-1.amazonaws.com/prod/movies', payload);
+    return this.http.post<any>('https://p3k848i9ad.execute-api.eu-central-1.amazonaws.com/prod/movies', payload);
   }
 }
 

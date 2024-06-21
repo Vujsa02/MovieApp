@@ -1,4 +1,3 @@
-// lib/movie-app-infra-stack.js
 const cdk = require('aws-cdk-lib');
 const s3 = require('aws-cdk-lib/aws-s3');
 const dynamodb = require('aws-cdk-lib/aws-dynamodb');
@@ -9,6 +8,8 @@ const sns = require('aws-cdk-lib/aws-sns');
 const subscriptions = require('aws-cdk-lib/aws-sns-subscriptions');
 const cloudfront = require('aws-cdk-lib/aws-cloudfront');
 const s3deploy = require('aws-cdk-lib/aws-s3-deployment');
+const path = require('path');
+
 
 class MovieAppInfraStack extends cdk.Stack {
   constructor(scope, id, props) {
@@ -16,6 +17,8 @@ class MovieAppInfraStack extends cdk.Stack {
 
     // S3 bucket for storing movies
     const movieBucket = new s3.Bucket(this, 'MovieBucket', {
+      bucketName: "mmm-movie-bucket",
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
       versioned: true,
     });
 
@@ -23,6 +26,8 @@ class MovieAppInfraStack extends cdk.Stack {
     const movieTable = new dynamodb.Table(this, 'MovieTable', {
       partitionKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      tableName: "mmm-movie-table"
     });
 
     // Cognito User Pool
@@ -40,12 +45,11 @@ class MovieAppInfraStack extends cdk.Stack {
     // SNS Topic for notifications
     const topic = new sns.Topic(this, 'MovieTopic');
 
-
     // Upload movie Lambda function
     const uploadMovieLambda = new lambda.Function(this, 'UploadMovieFunction', {
-      runtime: lambda.Runtime.NODEJS_16_X,
-      code: lambda.Code.fromAsset('lib/lambda.zip'),
-      handler: 'lambda/uploadMovie.handler',
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'upload_movie.lambda_handler',
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
         MOVIE_TABLE_NAME: movieTable.tableName,
@@ -57,9 +61,9 @@ class MovieAppInfraStack extends cdk.Stack {
 
     // Download movie Lambda function
     const downloadMovieLambda = new lambda.Function(this, 'DownloadMovieFunction', {
-      runtime: lambda.Runtime.NODEJS_16_X,
-      code: lambda.Code.fromAsset('lib/lambda.zip'),
-      handler: 'lambda/downloadMovie.handler',
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'download_movie.lambda_handler',
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
       },
@@ -77,29 +81,29 @@ class MovieAppInfraStack extends cdk.Stack {
     moviesResource.addMethod('POST', new apigateway.LambdaIntegration(uploadMovieLambda));
     moviesResource.addMethod('GET', new apigateway.LambdaIntegration(downloadMovieLambda));
 
-    // // CloudFront distribution for Angular app
-    // const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
-    //   originConfigs: [
-    //     {
-    //       s3OriginSource: {
-    //         s3BucketSource: movieBucket,
-    //       },
-    //       behaviors: [{ isDefaultBehavior: true }],
-    //     },
-    //   ],
-    // });
-    //
-    // // Deploy Angular app to S3 and invalidate CloudFront cache
-    // new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-    //   sources: [s3deploy.Source.asset('../angular-app/dist/angular-app')],
-    //   destinationBucket: movieBucket,
-    //   distribution,
-    //   distributionPaths: ['/*'],
-    // });
-    //
-    // new cdk.CfnOutput(this, 'DistributionDomainName', {
-    //   value: distribution.distributionDomainName,
-    // });
+    // CloudFront distribution for Angular app
+    const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
+      originConfigs: [
+        {
+          s3OriginSource: {
+            s3BucketSource: movieBucket,
+          },
+          behaviors: [{ isDefaultBehavior: true }],
+        },
+      ],
+    });
+
+    // Deploy Angular app to S3 and invalidate CloudFront cache
+    new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+      sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
+      destinationBucket: movieBucket,
+      distribution,
+      distributionPaths: ['/*'],
+    });
+
+    new cdk.CfnOutput(this, 'DistributionDomainName', {
+      value: distribution.distributionDomainName,
+    });
   }
 }
 
