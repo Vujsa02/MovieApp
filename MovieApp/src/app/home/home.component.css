@@ -2,10 +2,6 @@ mat-toolbar {
   background-color: #3F51B5;
 }
 
-div {
-  width: 100%;
-  justify-content: flex-end;
-}
 
 button {
   margin-right: 10px;
@@ -20,13 +16,14 @@ span{
   color : black;
 }
 
-.separator {
-  background-color: #536DFE; /* color for the separator */
-  width: 1px;
-  height: 40px; /* adjust the height of the separator */
-  margin: 0 10px; /* adjust the space between buttons and separators */
-  float: right;
+#file-input {
+  display: none;
 }
+
+.file-input-container {
+  display: inline-block;
+}
+
 
 .nav-item {
   background-color: #3F51B5;
@@ -41,4 +38,18 @@ span{
 
 .nav-item:hover {
   background-color: #536DFE; /* slightly brighter color on hover */
+}
+
+.title {
+  color: #3f3f3f;
+  margin: 15px; /* Space between the image and the text */
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Center items horizontally */
+  justify-content: center; /* Center items vertically */
 }

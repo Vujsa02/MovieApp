@@ -10,7 +10,6 @@ const cloudfront = require('aws-cdk-lib/aws-cloudfront');
 const s3deploy = require('aws-cdk-lib/aws-s3-deployment');
 const path = require('path');
 
-
 class MovieAppInfraStack extends cdk.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
@@ -71,6 +70,18 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieBucket.grantRead(downloadMovieLambda);
 
+    // Get movies metadata Lambda function
+    const getMoviesMetadataLambda = new lambda.Function(this, 'GetMoviesMetadataFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'get_movies_metadata.lambda_handler',
+      environment: {
+        MOVIE_TABLE_NAME: movieTable.tableName,
+      },
+    });
+
+    movieTable.grantReadData(getMoviesMetadataLambda);
+
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
       restApiName: 'Movie Service',
@@ -79,7 +90,11 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const moviesResource = api.root.addResource('movies');
     moviesResource.addMethod('POST', new apigateway.LambdaIntegration(uploadMovieLambda));
-    moviesResource.addMethod('GET', new apigateway.LambdaIntegration(downloadMovieLambda));
+
+    const movieResource = moviesResource.addResource('download').addResource('{movieId}');
+    movieResource.addMethod('GET', new apigateway.LambdaIntegration(downloadMovieLambda));
+
+    moviesResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));
 
     // CloudFront distribution for Angular app
     const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {

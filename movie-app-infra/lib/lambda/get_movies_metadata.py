@@ -1,18 +1,15 @@
 import boto3
 import os
 import json
-from botocore.exceptions import ClientError
+from boto3.dynamodb.conditions import Key
 
-s3 = boto3.client('s3')
-movie_bucket = os.environ['MOVIE_BUCKET_NAME']
+dynamodb = boto3.resource('dynamodb')
+movie_table = dynamodb.Table(os.environ['MOVIE_TABLE_NAME'])
 
 def lambda_handler(event, context):
-    movie_id = event['pathParameters']['movieId']
-
-    s3_key = movie_id
-
     try:
-        presigned_url = s3.generate_presigned_url('get_object', Params={'Bucket': movie_bucket, 'Key': s3_key}, ExpiresIn=3600)
+        response = movie_table.scan()
+        movies = response.get('Items', [])
 
         return {
             'statusCode': 200,
@@ -21,9 +18,9 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
             },
-            'body': json.dumps({'presigned_url': presigned_url})
+            'body': json.dumps(movies)
         }
-    except ClientError as e:
+    except Exception as e:
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
