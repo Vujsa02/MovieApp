@@ -2,7 +2,6 @@ import boto3
 import json
 import os
 import uuid
-import base64
 from datetime import datetime
 
 s3 = boto3.client('s3')
@@ -17,62 +16,58 @@ def lambda_handler(event, context):
     title = body['title']
     description = body['description']
     file_name = body['fileName']
-    file_content = body['fileContent']
 
     movie_id = str(uuid.uuid4())
     created_at = datetime.utcnow().isoformat()
 
-    s3_key = f"{movie_id}/{file_name}"
+    s3_key = f"{movie_id}"
 
-    # Ensure the base64 encoded string has correct padding
-    file_content += '=' * (-len(file_content) % 4)
-
+    # Generate presigned URL for uploading the file to S3
     try:
-        # Decode the base64 string to get the original binary content
-        decoded_file_content = base64.b64decode(file_content)
+        presigned_url = s3.generate_presigned_url(
+            'put_object',
+            Params={'Bucket': movie_bucket, 'Key': s3_key},
+            ExpiresIn=3600  # URL expiry time in seconds
+        )
     except Exception as e:
-        print(f"Error decoding base64 content: {e}")
+        print(f"Error generating presigned URL: {e}")
         return {
-            'statusCode': 400,
+            'statusCode': 500,
             'headers': {
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
             },
-            'body': json.dumps({'error': 'Invalid base64 content'})
+            'body': json.dumps({'error': 'Could not generate presigned URL'})
         }
-
-    s3_params = {
-        'Bucket': movie_bucket,
-        'Key': s3_key,
-        'Body': decoded_file_content
-    }
 
     db_params = {
         'movieId': movie_id,
         'title': title,
         'description': description,
         'fileName': file_name,
+        's3Key': s3_key,
         'createdAt': created_at
     }
 
     try:
-        print('Uploading file to S3:', s3_params)
-        s3.put_object(**s3_params)
-        print('File uploaded successfully to S3')
-
+        # Save movie metadata to DynamoDB
         print('Saving movie metadata to DynamoDB:', db_params)
         table.put_item(Item=db_params)
         print('Movie metadata saved to DynamoDB')
 
         return {
-            'statusCode': 201,
+            'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
             },
-            'body': json.dumps({'message': 'Movie uploaded successfully'})
+            'body': json.dumps({
+                'message': 'Presigned URL generated successfully',
+                'presignedUrl': presigned_url,
+                'movieId': movie_id
+            })
         }
     except Exception as e:
         print(f"Error: {e}")

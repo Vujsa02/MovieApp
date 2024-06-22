@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import {MovieService} from "./movie.service";
+import { MovieService } from './movie.service';
 
 @Component({
   selector: 'app-home',
@@ -10,9 +9,7 @@ import {MovieService} from "./movie.service";
 export class HomeComponent {
   selectedFile: File | null = null;  // Variable to store the selected file
 
-  constructor(
-    private service: MovieService  // Inject the service
-  ) {}
+  constructor(private service: MovieService) {}
 
   // Method to handle file selection
   onFileSelected(event: any) {
@@ -21,6 +18,7 @@ export class HomeComponent {
 
   // Method to download a movie
   downloadMovie() {
+    // Implement download logic here
   }
 
   // Method to upload a movie
@@ -30,15 +28,17 @@ export class HomeComponent {
       const reader = new FileReader();
       reader.readAsDataURL(this.selectedFile);
       reader.onload = () => {
-        const fileContent = reader.result;
-        if (fileContent && typeof fileContent === 'string') {
-          this.service.uploadMovie('Movie Title', 'Movie Description', this.selectedFile?.name || 'filmic', fileContent).subscribe(() => {
-            alert('Movie uploaded successfully');
-          });
+        const fileContent = reader.result as string;
+        if (fileContent) {
+          this.service.uploadMovie('Movie Title', 'Movie Description', this.selectedFile?.name || 'filmic', fileContent)
+            .subscribe(() => {
+              alert('Movie uploaded successfully');
+            }, error => {
+              console.error('Error uploading movie', error);
+              alert('Failed to upload movie');
+            });
         }
-
       };
     }
   }
-
 }
