@@ -21,12 +21,13 @@ span{
 }
 
 .separator {
-  background-color: #536DFE; /* color for the separator */
-  width: 1px;
-  height: 40px; /* adjust the height of the separator */
-  margin: 0 10px; /* adjust the space between buttons and separators */
-  float: right;
-}
+    background-color: #536DFE; /* color for the separator */
+    width: 1px;
+    height: 30px; /* adjust the height of the separator */
+    margin: 5px 10px; /* adjust the space between buttons and separators */
+    float: right;
+    align-content: center;
+  }
 
 .nav-item {
   background-color: #3F51B5;
@@ -41,4 +42,10 @@ span{
 
 .nav-item:hover {
   background-color: #536DFE; /* slightly brighter color on hover */
+}
+
+.icon-image {
+  width: 50px; /* Adjust size as needed */
+  height: auto; /* Maintain aspect ratio */
+  margin-right: 10px; /* Example margin */
 }
