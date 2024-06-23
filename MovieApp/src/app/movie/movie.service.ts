@@ -17,7 +17,7 @@ export class MovieService {
       fileName
     };
 
-    return this.http.post<any>('https://9z7p8i4wvh.execute-api.eu-central-1.amazonaws.com/prod/movies', payload).pipe(
+    return this.http.post<any>('https://13twjnxr1g.execute-api.eu-central-1.amazonaws.com/prod/movies', payload).pipe(
       switchMap(response => {
         const presignedUrl = response.presignedUrl;
 
@@ -42,11 +42,11 @@ export class MovieService {
 
   // Method to get presigned URL and download a movie
   getPresignedUrl(movieId: string): Observable<any> {
-    return this.http.get<any>(`https://9z7p8i4wvh.execute-api.eu-central-1.amazonaws.com/prod/movies/download/${movieId}`);
+    return this.http.get<any>(`https://13twjnxr1g.execute-api.eu-central-1.amazonaws.com/prod/movies/download/${movieId}`);
   }
 
   // Method to get movie metadata
   getMoviesMetadata(): Observable<any> {
-    return this.http.get<any>('https://9z7p8i4wvh.execute-api.eu-central-1.amazonaws.com/prod/movies');
+    return this.http.get<any>('https://13twjnxr1g.execute-api.eu-central-1.amazonaws.com/prod/movies');
   }
 }
