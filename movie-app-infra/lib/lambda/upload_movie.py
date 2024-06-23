@@ -10,15 +10,21 @@ movie_bucket = os.environ['MOVIE_BUCKET_NAME']
 movie_table = os.environ['MOVIE_TABLE_NAME']
 table = dynamodb.Table(movie_table)
 
-
 def lambda_handler(event, context):
     body = json.loads(event['body'])
     title = body['title']
     description = body['description']
     file_name = body['fileName']
+    actors = body['actors']
+    movie_size = body['movie_size']
+    genre = body['genre']
+    duration = body['duration']
+    director = body['director']
+    image = body['image']
 
     movie_id = str(uuid.uuid4())
     created_at = datetime.utcnow().isoformat()
+    updated_at = created_at
 
     s3_key = f"{movie_id}"
 
@@ -46,8 +52,15 @@ def lambda_handler(event, context):
         'title': title,
         'description': description,
         'fileName': file_name,
+        'actors': actors,
+        'movie_size': movie_size,
+        'genre': genre,
+        'duration': duration,
+        'director': director,
         's3Key': s3_key,
-        'createdAt': created_at
+        'createdAt': created_at,
+        'updatedAt': updated_at,
+        'image': image
     }
 
     try:

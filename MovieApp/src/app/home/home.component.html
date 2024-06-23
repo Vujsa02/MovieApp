@@ -3,12 +3,5 @@
     <span class="title">Newest edition</span>
     <app-movie-list></app-movie-list>
   </div>
-  <div class="flex-row">
-    <div class="file-input-container">
-      <input type="file" id="file-input" (change)="onFileSelected($event)" hidden>
-      <label for="file-input" class="nav-item">Choose File</label>
-    </div>
-    <button class="nav-item" (click)="uploadMovie()">Upload Movie</button>
-  </div>
-
+  <button class="nav-item" (click)="openUploadWindow()">Upload Movie</button>
 </div>

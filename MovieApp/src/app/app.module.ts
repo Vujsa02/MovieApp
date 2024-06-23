@@ -7,6 +7,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {MatToolbar} from "@angular/material/toolbar";
 import {HttpClientModule} from "@angular/common/http";
 import {MovieModule} from "./movie/movie.module";
+import {AppRoutingModule} from "./app-routing.module";
 
 
 @NgModule({
@@ -17,6 +18,7 @@ import {MovieModule} from "./movie/movie.module";
   imports: [
     LayoutModule,
     BrowserModule,
+    AppRoutingModule,
     HttpClientModule,
     MovieModule
   ],
