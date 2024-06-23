@@ -29,7 +29,7 @@ class MovieAppInfraStack extends cdk.Stack {
       tableName: "mmm-movie-table"
     });
 
-    // Cognito User Pool
+// Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
       selfSignUpEnabled: true,
       signInAliases: { email: true },
@@ -39,6 +39,32 @@ class MovieAppInfraStack extends cdk.Stack {
         requireUppercase: true,
         requireDigits: true,
       },
+      autoVerify: { email: true },
+    });
+
+    // App Client
+    const userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
+      userPool,
+      generateSecret: false,
+    });
+
+    // User Pool Domain
+    const userPoolDomain = new cognito.UserPoolDomain(this, 'UserPoolDomain', {
+      userPool,
+      cognitoDomain: {
+        domainPrefix: 'cine-cloud-auth', // replace with a unique domain prefix
+      },
+    });
+
+    // Output values for reference
+    new cdk.CfnOutput(this, 'UserPoolId', {
+      value: userPool.userPoolId,
+    });
+    new cdk.CfnOutput(this, 'UserPoolClientId', {
+      value: userPoolClient.userPoolClientId,
+    });
+    new cdk.CfnOutput(this, 'UserPoolDomainOutput', {
+      value: userPoolDomain.domainName,
     });
 
     // SNS Topic for notifications
@@ -109,12 +135,12 @@ class MovieAppInfraStack extends cdk.Stack {
     });
 
     // Deploy Angular app to S3 and invalidate CloudFront cache
-    new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-      sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
-      destinationBucket: movieBucket,
-      distribution,
-      distributionPaths: ['/*'],
-    });
+    // new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+    //   sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
+    //   destinationBucket: movieBucket,
+    //   distribution,
+    //   distributionPaths: ['/*'],
+    // });
 
     new cdk.CfnOutput(this, 'DistributionDomainName', {
       value: distribution.distributionDomainName,
