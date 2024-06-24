@@ -8,21 +8,24 @@ import {MatToolbar} from "@angular/material/toolbar";
 import {HttpClientModule} from "@angular/common/http";
 import {MovieModule} from "./movie/movie.module";
 import {AppRoutingModule} from "./app-routing.module";
-import {MaterialModule} from "./infrastructure/material/material.module";
-import { ToastrModule } from 'ngx-toastr';
+import {AuthModule} from "./auth/auth.module";
+import {MatButtonModule} from "@angular/material/button";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {ToastrModule} from "ngx-toastr";
 
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
-
   ],
   imports: [
-    MaterialModule,
-    LayoutModule,
     BrowserModule,
+    BrowserAnimationsModule,
+    MatSnackBarModule,
+    MatButtonModule,
+    HttpClientModule,
     AppRoutingModule,
     HttpClientModule,
     MovieModule,

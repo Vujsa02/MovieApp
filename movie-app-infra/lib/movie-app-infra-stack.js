@@ -43,6 +43,16 @@ class MovieAppInfraStack extends cdk.Stack {
       tableName: "mmm-movie-table"
     });
 
+    // User pool
+
+    const reviewTable = new dynamodb.Table(this, 'ReviewTable', {
+      partitionKey: { name: 'reviewId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      tableName: "mmm-review-table"
+    });
+
+
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
       selfSignUpEnabled: true,
@@ -53,6 +63,56 @@ class MovieAppInfraStack extends cdk.Stack {
         requireUppercase: true,
         requireDigits: true,
       },
+      autoVerify: { email: true },
+      userVerification:{
+        emailSubject: "Verify your email address",
+        emailBody: "Hello, Thanks for signing up to our app! Click here to verify your email address {##Verify Email##}",
+        emailStyle: cognito.VerificationEmailStyle.LINK,
+      },
+
+      standardAttributes: {
+        email: {
+          mutable: true,
+          required: true,
+        },
+        familyName: {
+          mutable: true,
+          required: true,
+        },
+        givenName: {
+          mutable: true,
+          required: true,
+        },
+        birthdate: {
+          mutable: true,
+          required: true,
+        }
+      }
+    });
+
+    // App Client
+    const userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
+      userPool,
+      generateSecret: false,
+    });
+
+    // User Pool Domain
+    const userPoolDomain = new cognito.UserPoolDomain(this, 'UserPoolDomain', {
+      userPool,
+      cognitoDomain: {
+        domainPrefix: 'cine-cloud-auth', // replace with a unique domain prefix
+      },
+    });
+
+    // Output values for reference
+    new cdk.CfnOutput(this, 'UserPoolId', {
+      value: userPool.userPoolId,
+    });
+    new cdk.CfnOutput(this, 'UserPoolClientId', {
+      value: userPoolClient.userPoolClientId,
+    });
+    new cdk.CfnOutput(this, 'UserPoolDomainOutput', {
+      value: userPoolDomain.domainName,
     });
 
     // SNS Topic for notifications
@@ -108,6 +168,19 @@ class MovieAppInfraStack extends cdk.Stack {
     movieTable.grantReadData(getMoviesMetadataLambda);
     movieTable.grantReadData(getMovieMetadataByIdLambda);
 
+
+    const addReviewLambda = new lambda.Function(this, 'AddReviewFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'add_review.lambda_handler',
+      environment: {
+        REVIEW_TABLE_NAME: reviewTable.tableName,
+      },
+    });
+
+    reviewTable.grantWriteData(addReviewLambda);
+
+
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
       restApiName: 'Movie Service',
@@ -121,6 +194,9 @@ class MovieAppInfraStack extends cdk.Stack {
     movieResource.addMethod('GET', new apigateway.LambdaIntegration(downloadMovieLambda));
 
     moviesResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));
+
+    const reviewsResource = api.root.addResource('reviews');
+    reviewsResource.addMethod('POST', new apigateway.LambdaIntegration(addReviewLambda));
 
     const movieByIdResource = moviesResource.addResource('{movieId}');
     movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));

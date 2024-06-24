@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import {AwsCognitoService} from "../../auth/aws-cognito.service";
+import {ToastrService} from "ngx-toastr";
 
 @Component({
   selector: 'app-navbar',
@@ -8,9 +10,26 @@ import { Router } from '@angular/router';
 })
 export class NavbarComponent {
 
-  constructor(private router: Router) { }
+  constructor(
+    private awsCognitoService: AwsCognitoService,
+    private router: Router,
+    private toastr: ToastrService
+  ) {}
+
+  isLoggedIn(): boolean {
+    return this.awsCognitoService.isLoggedIn();
+  }
+
+  logout(): void {
+    this.awsCognitoService.logout();
+    this.router.navigate(['/login']);
+    this.toastr.success('Logged out successfully', 'Success', {
+      timeOut: 5000
+    });
+
+  }
 
   navigateToHome() {
-    this.router.navigate(['']);
+    this.router.navigate(['/home']);
   }
 }

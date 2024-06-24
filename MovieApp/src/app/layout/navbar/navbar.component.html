@@ -1,11 +1,17 @@
 <mat-toolbar>
-  <img src="assets/icons/cloudIcon.png" alt="Icon" class="icon-image" (click)="navigateToHome()">
+  <img src="assets/icons/cloudIcon.png" alt="Icon" class="icon-image" height="50" width="50" (click)="navigateToHome()">
   <span style="font-size: 26px" (click)="navigateToHome()">Cine Cloud</span>
   <div class="separator"></div>
-
-  <div style="vertical-align: center">
-    <a class="nav-item">Login</a>
-    <div class="separator"></div>
-    <a class="nav-item">Register</a>
+  <div style="margin-left: auto">
+    <ng-container *ngIf="!isLoggedIn(); else loggedInTemplate">
+      <a class="nav-item" routerLink="/login">Login</a>
+      <div class="separator"></div>
+      <a class="nav-item" routerLink="/register">Register</a>
+    </ng-container>
+    <ng-template #loggedInTemplate>
+      <a class="nav-item" routerLink="/home">Home</a>
+      <div class="separator"></div>
+      <a class="nav-item" (click)="logout()">Logout</a>
+    </ng-template>
   </div>
 </mat-toolbar>

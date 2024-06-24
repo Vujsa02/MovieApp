@@ -1,18 +1,20 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {NavbarComponent} from "./navbar/navbar.component";
 import {MatToolbar} from "@angular/material/toolbar";
-import {MaterialModule} from "../infrastructure/material/material.module";
+import {RouterLink} from "@angular/router";
 
 
 @NgModule({
   declarations: [
     NavbarComponent
   ],
-  imports: [
-    CommonModule,
-    MatToolbar,
-  ],
+    imports: [
+        CommonModule,
+        MatToolbar,
+        RouterLink,
+        NgOptimizedImage
+    ],
   exports: [
     NavbarComponent
   ]
