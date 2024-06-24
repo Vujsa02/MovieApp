@@ -43,10 +43,10 @@ class MovieAppInfraStack extends cdk.Stack {
       tableName: "mmm-movie-table"
     });
 
-// Cognito User Pool
+    // User pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
       selfSignUpEnabled: true,
-      signInAliases: { email: true },
+      signInAliases: { email: true, username: true},
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,
@@ -54,6 +54,30 @@ class MovieAppInfraStack extends cdk.Stack {
         requireDigits: true,
       },
       autoVerify: { email: true },
+      userVerification:{
+        emailSubject: "Verify your email address",
+        emailBody: "Hello, Thanks for signing up to our app! Click here to verify your email address {##Verify Email##}",
+        emailStyle: cognito.VerificationEmailStyle.LINK,
+      },
+
+      standardAttributes: {
+        email: {
+          mutable: true,
+          required: true,
+        },
+        familyName: {
+          mutable: true,
+          required: true,
+        },
+        givenName: {
+          mutable: true,
+          required: true,
+        },
+        birthdate: {
+          mutable: true,
+          required: true,
+        }
+      }
     });
 
     // App Client
