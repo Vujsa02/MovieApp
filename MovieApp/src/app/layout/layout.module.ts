@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {NavbarComponent} from "./navbar/navbar.component";
 import {MatToolbar} from "@angular/material/toolbar";
 import {RouterLink} from "@angular/router";
@@ -12,7 +12,8 @@ import {RouterLink} from "@angular/router";
     imports: [
         CommonModule,
         MatToolbar,
-        RouterLink
+        RouterLink,
+        NgOptimizedImage
     ],
   exports: [
     NavbarComponent

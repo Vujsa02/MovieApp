@@ -19,6 +19,20 @@ class MovieAppInfraStack extends cdk.Stack {
       bucketName: "mmm-movie-bucket",
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       versioned: true,
+      cors: [
+        {
+          allowedHeaders: ["*"],
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.PUT,
+            s3.HttpMethods.POST,
+            s3.HttpMethods.DELETE,
+          ],
+          allowedOrigins: ["http://localhost:4200"],
+          exposedHeaders: ["ETag"],
+          maxAge: 3000,
+        },
+      ],
     });
 
     // DynamoDB table for metadata

@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import {RegisterComponent} from "./register/register.component";
 import {FormsModule} from "@angular/forms";
 import {LoginComponent} from "./login/login.component";
+import {RouterLink} from "@angular/router";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
+import {MatButtonModule} from "@angular/material/button";
 
 
 
@@ -13,7 +17,11 @@ import {LoginComponent} from "./login/login.component";
   ],
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    RouterLink,
+    BrowserAnimationsModule,
+    MatSnackBarModule,
+    MatButtonModule,
   ]
 })
 export class AuthModule { }

@@ -5,11 +5,11 @@ import {
   CognitoUser,
   AuthenticationDetails,
 } from 'amazon-cognito-identity-js';
-// import { environment } from '../environments/environment';
+import {environment} from "../../environment";
 
 const poolData = {
-  UserPoolId: "eu-central-1_p8whNHeLX", // Vaš User Pool ID
-  ClientId: "7ac4hht4vl1r1hqvnjpgpa7mg6", // Vaš App Client ID
+  UserPoolId: environment.userPoolId,
+  ClientId: environment.clientId,
 };
 
 const userPool = new CognitoUserPool(poolData);
@@ -61,5 +61,17 @@ export class AwsCognitoService {
         },
       });
     });
+  }
+
+  logout() {
+    const user = userPool.getCurrentUser();
+    if (user) {
+      user.signOut();
+    }
+  }
+
+  isLoggedIn(): boolean {
+    const user = userPool.getCurrentUser();
+    return user !== null;
   }
 }
