@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { AwsCognitoService } from '../aws-cognito.service';
 import { Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { NgForm } from '@angular/forms';
 import {ToastrService} from "ngx-toastr";
 
@@ -22,7 +21,6 @@ export class RegisterComponent {
   constructor(
     private awsCognitoService: AwsCognitoService,
     private router: Router,
-    private snackBar: MatSnackBar,
     private toastr: ToastrService
   ) {}
 
@@ -54,6 +52,28 @@ export class RegisterComponent {
     // Basic validation, you can add more specific validation as needed
     if (!this.username || !this.password || !this.email || !this.firstName || !this.lastName || !this.birthdate) {
       this.errorMessage = 'All fields are required.';
+      return false;
+    }
+    // validate if date is in the future
+    if (new Date(this.birthdate) > new Date()) {
+      this.errorMessage = 'Birthdate cannot be in the future.';
+      return false;
+    }
+    // validate if password is strong
+    if (this.password.length < 8) {
+      this.errorMessage = 'Password must be at least 8 characters long.';
+      return false;
+    }
+    if (!/[a-z]/.test(this.password)) {
+      this.errorMessage = 'Password must contain at least one lowercase letter.';
+      return false;
+    }
+    if (!/[A-Z]/.test(this.password)) {
+      this.errorMessage = 'Password must contain at least one uppercase letter.';
+      return false;
+    }
+    if (!/[0-9]/.test(this.password)) {
+      this.errorMessage = 'Password must contain at least one digit.';
       return false;
     }
 

@@ -22,9 +22,9 @@ export class AwsCognitoService {
   register(username: string, password: string, email: string, firstName: string, lastName: string, birthdate: string) {
     const attributeList = [
       new CognitoUserAttribute({ Name: 'email', Value: email }),
-      new CognitoUserAttribute({ Name: 'given_name', Value: firstName }),
       new CognitoUserAttribute({ Name: 'family_name', Value: lastName }),
-      new CognitoUserAttribute({ Name: 'birthdate', Value: birthdate })
+      new CognitoUserAttribute({ Name: 'given_name', Value: firstName }),
+      new CognitoUserAttribute({ Name: 'birthdate', Value: birthdate }),
     ];
 
     return new Promise((resolve, reject) => {

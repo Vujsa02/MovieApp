@@ -16,7 +16,6 @@ export class LoginComponent {
   constructor(
     private awsCognitoService: AwsCognitoService,
     private router: Router,
-    private snackBar: MatSnackBar,
     private toastr: ToastrService
   ) {}
 
