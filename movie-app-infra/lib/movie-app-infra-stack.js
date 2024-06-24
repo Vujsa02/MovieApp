@@ -94,7 +94,19 @@ class MovieAppInfraStack extends cdk.Stack {
       },
     });
 
+    const getMovieMetadataByIdLambda = new lambda.Function(this, 'GetMovieByIdFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'get_movie_by_id.lambda_handler',
+      environment: {
+        MOVIE_TABLE_NAME: movieTable.tableName,
+      },
+    });
+
+
+
     movieTable.grantReadData(getMoviesMetadataLambda);
+    movieTable.grantReadData(getMovieMetadataByIdLambda);
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
@@ -109,6 +121,9 @@ class MovieAppInfraStack extends cdk.Stack {
     movieResource.addMethod('GET', new apigateway.LambdaIntegration(downloadMovieLambda));
 
     moviesResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));
+
+    const movieByIdResource = moviesResource.addResource('{movieId}');
+    movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));
 
     // CloudFront distribution for Angular app
     const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
