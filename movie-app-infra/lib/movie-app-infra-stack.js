@@ -56,7 +56,7 @@ class MovieAppInfraStack extends cdk.Stack {
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
       selfSignUpEnabled: true,
-      signInAliases: { email: true },
+      signInAliases: { email: true, username: true},
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,

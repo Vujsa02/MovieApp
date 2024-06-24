@@ -1,6 +1,5 @@
 // movie-list.component.ts
 import { Component, OnInit } from '@angular/core';
-import {MovieCard} from "../movie-card/movie-card.model";
 import {MovieService} from "../movie.service";
 import {Genre, Movie} from "../movie-metadata.model";
 
@@ -39,8 +38,8 @@ export class MovieListComponent implements OnInit {
       (this.searchCriteria.title ? movie.title.toLowerCase().includes(this.searchCriteria.title.toLowerCase()) : true) &&
       (this.searchCriteria.description ? movie.description.toLowerCase().includes(this.searchCriteria.description.toLowerCase()) : true) &&
       (this.searchCriteria.actor ? movie.actors.some(actor => actor.toLowerCase().includes(this.searchCriteria.actor.toLowerCase())) : true) &&
-      (this.searchCriteria.director ? movie.director.toLowerCase().includes(this.searchCriteria.director.toLowerCase()) : true) &&
-      (this.searchCriteria.genre ? movie.genre.toLowerCase().includes(this.searchCriteria.genre.toLowerCase()) : true)
+      (this.searchCriteria.director ? movie.director.toLowerCase().includes(this.searchCriteria.director.toLowerCase()) : true)
+      //(this.searchCriteria.genre ? movie.genre.toLowerCase().includes(this.searchCriteria.genre.toLowerCase()) : true)
     );
     this.movies = this.filteredMovies;
   }

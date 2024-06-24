@@ -34,6 +34,7 @@ import {ToastrModule} from "ngx-toastr";
       positionClass: 'toast-top-right', // Set the position of toastr messages
       preventDuplicates: true, // Prevent duplicate toastr messages
     }),
+    LayoutModule,
   ],
   bootstrap: [AppComponent]
 })

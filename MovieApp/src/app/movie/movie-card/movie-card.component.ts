@@ -1,5 +1,4 @@
 import {Component, Input, Output} from '@angular/core';
-import {MovieCard} from "./movie-card.model";
 import EventEmitter from "node:events";
 import {MatCard} from "@angular/material/card";
 import {MovieService} from "../movie.service";
