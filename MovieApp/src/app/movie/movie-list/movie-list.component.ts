@@ -2,7 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import {MovieCard} from "../movie-card/movie-card.model";
 import {MovieService} from "../movie.service";
-import {Movie} from "../movie-metadata.model";
+import {Genre, Movie} from "../movie-metadata.model";
 
 
 @Component({
@@ -12,6 +12,14 @@ import {Movie} from "../movie-metadata.model";
 })
 export class MovieListComponent implements OnInit {
   movies: Movie[] = [];
+  filteredMovies: Movie[] = [];
+  searchCriteria = {
+    title: '',
+    description: '',
+    actor: '',
+    director: '',
+    genre: ''
+  };
 
   constructor(private movieService: MovieService) {}
 
@@ -23,5 +31,17 @@ export class MovieListComponent implements OnInit {
     this.movieService.getMoviesMetadata().subscribe((movies) => {
       this.movies = movies;
     });
+  }
+
+  searchMovies() {
+    this.fetchMovies();
+    this.filteredMovies = this.movies.filter(movie =>
+      (this.searchCriteria.title ? movie.title.toLowerCase().includes(this.searchCriteria.title.toLowerCase()) : true) &&
+      (this.searchCriteria.description ? movie.description.toLowerCase().includes(this.searchCriteria.description.toLowerCase()) : true) &&
+      (this.searchCriteria.actor ? movie.actors.some(actor => actor.toLowerCase().includes(this.searchCriteria.actor.toLowerCase())) : true) &&
+      (this.searchCriteria.director ? movie.director.toLowerCase().includes(this.searchCriteria.director.toLowerCase()) : true) &&
+      (this.searchCriteria.genre ? movie.genre.toLowerCase().includes(this.searchCriteria.genre.toLowerCase()) : true)
+    );
+    this.movies = this.filteredMovies;
   }
 }
