@@ -8,6 +8,11 @@ import {MatToolbar} from "@angular/material/toolbar";
 import {HttpClientModule} from "@angular/common/http";
 import {MovieModule} from "./movie/movie.module";
 import {AppRoutingModule} from "./app-routing.module";
+import {AuthModule} from "./auth/auth.module";
+import {MatButtonModule} from "@angular/material/button";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {ToastrModule} from "ngx-toastr";
 
 
 @NgModule({
@@ -18,9 +23,18 @@ import {AppRoutingModule} from "./app-routing.module";
   imports: [
     LayoutModule,
     BrowserModule,
-    AppRoutingModule,
+    BrowserAnimationsModule,
+    MatSnackBarModule,
+    MatButtonModule,
     HttpClientModule,
-    MovieModule
+    AppRoutingModule,
+    LayoutModule,
+    AuthModule,
+    ToastrModule.forRoot({
+      timeOut: 3000, // Set the duration for toastr messages (milliseconds)
+      positionClass: 'toast-top-right', // Set the position of toastr messages
+      preventDuplicates: true, // Prevent duplicate toastr messages
+    }),
   ],
   bootstrap: [AppComponent]
 })

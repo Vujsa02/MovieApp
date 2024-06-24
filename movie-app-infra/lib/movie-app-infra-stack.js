@@ -43,6 +43,7 @@ class MovieAppInfraStack extends cdk.Stack {
       tableName: "mmm-movie-table"
     });
 
+    // User pool
 
     const reviewTable = new dynamodb.Table(this, 'ReviewTable', {
       partitionKey: { name: 'reviewId', type: dynamodb.AttributeType.STRING },
@@ -55,13 +56,63 @@ class MovieAppInfraStack extends cdk.Stack {
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
       selfSignUpEnabled: true,
-      signInAliases: { email: true },
+      signInAliases: { email: true, username: true},
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,
         requireUppercase: true,
         requireDigits: true,
       },
+      autoVerify: { email: true },
+      userVerification:{
+        emailSubject: "Verify your email address",
+        emailBody: "Hello, Thanks for signing up to our app! Click here to verify your email address {##Verify Email##}",
+        emailStyle: cognito.VerificationEmailStyle.LINK,
+      },
+
+      standardAttributes: {
+        email: {
+          mutable: true,
+          required: true,
+        },
+        familyName: {
+          mutable: true,
+          required: true,
+        },
+        givenName: {
+          mutable: true,
+          required: true,
+        },
+        birthdate: {
+          mutable: true,
+          required: true,
+        }
+      }
+    });
+
+    // App Client
+    const userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
+      userPool,
+      generateSecret: false,
+    });
+
+    // User Pool Domain
+    const userPoolDomain = new cognito.UserPoolDomain(this, 'UserPoolDomain', {
+      userPool,
+      cognitoDomain: {
+        domainPrefix: 'cine-cloud-auth', // replace with a unique domain prefix
+      },
+    });
+
+    // Output values for reference
+    new cdk.CfnOutput(this, 'UserPoolId', {
+      value: userPool.userPoolId,
+    });
+    new cdk.CfnOutput(this, 'UserPoolClientId', {
+      value: userPoolClient.userPoolClientId,
+    });
+    new cdk.CfnOutput(this, 'UserPoolDomainOutput', {
+      value: userPoolDomain.domainName,
     });
 
     // SNS Topic for notifications
@@ -148,12 +199,12 @@ class MovieAppInfraStack extends cdk.Stack {
     });
 
     // Deploy Angular app to S3 and invalidate CloudFront cache
-    new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-      sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
-      destinationBucket: movieBucket,
-      distribution,
-      distributionPaths: ['/*'],
-    });
+    // new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+    //   sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
+    //   destinationBucket: movieBucket,
+    //   distribution,
+    //   distributionPaths: ['/*'],
+    // });
 
     new cdk.CfnOutput(this, 'DistributionDomainName', {
       value: distribution.distributionDomainName,
