@@ -34,7 +34,6 @@ export class MovieCardComponent {
   }
 
   openDetailsWindow(){
-    this.router.navigate(['/details', this.card.movieId], { state: { movie: this.card } });
-
+    this.router.navigate(['/details/', this.card.movieId], { state: { movie: this.card } });
   }
 }

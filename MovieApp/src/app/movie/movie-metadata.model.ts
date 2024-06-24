@@ -5,7 +5,7 @@ export interface Movie{
   fileName: string;
   actors: string[];
   movie_size: number;
-  genre: Genre;
+  genre: Genre[];
   duration: number;
   director: string;
   createdAt: string;

@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {NavbarComponent} from "./navbar/navbar.component";
 import {MatToolbar} from "@angular/material/toolbar";
+import {MaterialModule} from "../infrastructure/material/material.module";
 
 
 @NgModule({
@@ -10,7 +11,7 @@ import {MatToolbar} from "@angular/material/toolbar";
   ],
   imports: [
     CommonModule,
-    MatToolbar
+    MatToolbar,
   ],
   exports: [
     NavbarComponent

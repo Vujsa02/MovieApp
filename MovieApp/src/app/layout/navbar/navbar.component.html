@@ -1,6 +1,8 @@
 <mat-toolbar>
-  <img src="assets/icons/cloudIcon.png" alt="Icon" class="icon-image">
-  <span style="font-size: 26px">Cine Cloud</span>
+  <img src="assets/icons/cloudIcon.png" alt="Icon" class="icon-image" (click)="navigateToHome()">
+  <span style="font-size: 26px" (click)="navigateToHome()">Cine Cloud</span>
+  <div class="separator"></div>
+
   <div style="vertical-align: center">
     <a class="nav-item">Login</a>
     <div class="separator"></div>
