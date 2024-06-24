@@ -154,7 +154,19 @@ class MovieAppInfraStack extends cdk.Stack {
       },
     });
 
+    const getMovieMetadataByIdLambda = new lambda.Function(this, 'GetMovieByIdFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'get_movie_by_id.lambda_handler',
+      environment: {
+        MOVIE_TABLE_NAME: movieTable.tableName,
+      },
+    });
+
+
+
     movieTable.grantReadData(getMoviesMetadataLambda);
+    movieTable.grantReadData(getMovieMetadataByIdLambda);
 
 
     const addReviewLambda = new lambda.Function(this, 'AddReviewFunction', {
@@ -186,6 +198,9 @@ class MovieAppInfraStack extends cdk.Stack {
     const reviewsResource = api.root.addResource('reviews');
     reviewsResource.addMethod('POST', new apigateway.LambdaIntegration(addReviewLambda));
 
+    const movieByIdResource = moviesResource.addResource('{movieId}');
+    movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));
+
     // CloudFront distribution for Angular app
     const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
       originConfigs: [
@@ -199,12 +214,12 @@ class MovieAppInfraStack extends cdk.Stack {
     });
 
     // Deploy Angular app to S3 and invalidate CloudFront cache
-    // new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-    //   sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
-    //   destinationBucket: movieBucket,
-    //   distribution,
-    //   distributionPaths: ['/*'],
-    // });
+    new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+      sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
+      destinationBucket: movieBucket,
+      distribution,
+      distributionPaths: ['/*'],
+    });
 
     new cdk.CfnOutput(this, 'DistributionDomainName', {
       value: distribution.distributionDomainName,

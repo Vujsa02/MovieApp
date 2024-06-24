@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import {Movie} from "../movie-metadata.model";
 import {ActivatedRoute, Router} from "@angular/router";
+import {MovieService} from "../movie.service";
 
 @Component({
   selector: 'app-movie-details',
@@ -12,16 +13,23 @@ import {ActivatedRoute, Router} from "@angular/router";
 export class MovieDetailsComponent {
   movie!: Movie;
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(private movieService: MovieService,
+              private router: Router,
+              private route: ActivatedRoute,) {}
 
   ngOnInit() {
-    const navigation = this.router.getCurrentNavigation();
-    if (navigation?.extras?.state) {
-      this.movie = navigation.extras.state['movie'];
-      alert(this.movie);
-    } else {
-      // Handle the case where movie is not available in the state
-      console.error('No movie data available in state');
-    }
+    this.route.params.subscribe((params) => {
+      const id = +params['_id'] + '';
+      this.movieService.getMoviesMetadataById(id).subscribe({
+        next: (data: Movie)=>{
+          this.movie = data;
+          console.log(this.movie);
+        },
+      error: (_) => {
+        console.log("Greska!");
+      }
+
+      })
+    });
   }
 }

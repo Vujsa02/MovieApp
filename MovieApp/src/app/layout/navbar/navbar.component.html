@@ -1,6 +1,7 @@
 <mat-toolbar>
-  <img src="assets/icons/cloudIcon.png" alt="Icon" class="icon-image" height="50" width="50">
-  <span style="font-size: 26px">Cine Cloud</span>
+  <img src="/assets/icons/cloudIcon.png" alt="Icon" class="icon-image" height="50" width="50" (click)="navigateToHome()">
+  <span style="font-size: 26px" (click)="navigateToHome()">Cine Cloud</span>
+  <div class="separator"></div>
   <div style="margin-left: auto">
     <ng-container *ngIf="!isLoggedIn(); else loggedInTemplate">
       <a class="nav-item" routerLink="/login">Login</a>

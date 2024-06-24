@@ -7,8 +7,7 @@ import {MovieUploadComponent} from "./movie/movie-upload/movie-upload.component"
 
 export const routes: Routes = [
   // { path: '', component:HomeComponent },
-  { path: 'details/:_id', component:MovieDetailsComponent },
-  { path: 'upload', component:MovieUploadComponent },
+
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'home', component:HomeComponent },
   { path: 'register', component: RegisterComponent },

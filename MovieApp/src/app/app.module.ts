@@ -21,20 +21,20 @@ import {ToastrModule} from "ngx-toastr";
     HomeComponent,
   ],
   imports: [
-    LayoutModule,
     BrowserModule,
     BrowserAnimationsModule,
     MatSnackBarModule,
     MatButtonModule,
     HttpClientModule,
     AppRoutingModule,
-    LayoutModule,
-    AuthModule,
+    HttpClientModule,
+    MovieModule,
     ToastrModule.forRoot({
       timeOut: 3000, // Set the duration for toastr messages (milliseconds)
       positionClass: 'toast-top-right', // Set the position of toastr messages
       preventDuplicates: true, // Prevent duplicate toastr messages
     }),
+    LayoutModule,
   ],
   bootstrap: [AppComponent]
 })
