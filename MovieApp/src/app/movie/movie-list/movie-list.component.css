@@ -1,0 +1,9 @@
+.movie-list {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.movie-list app-movie-card {
+  margin-right: 10px;
+}
