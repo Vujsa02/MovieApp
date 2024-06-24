@@ -43,6 +43,15 @@ class MovieAppInfraStack extends cdk.Stack {
       tableName: "mmm-movie-table"
     });
 
+
+    const reviewTable = new dynamodb.Table(this, 'ReviewTable', {
+      partitionKey: { name: 'reviewId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      tableName: "mmm-review-table"
+    });
+
+
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
       selfSignUpEnabled: true,
@@ -96,6 +105,19 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieTable.grantReadData(getMoviesMetadataLambda);
 
+
+    const addReviewLambda = new lambda.Function(this, 'AddReviewFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'add_review.lambda_handler',
+      environment: {
+        REVIEW_TABLE_NAME: reviewTable.tableName,
+      },
+    });
+
+    reviewTable.grantWriteData(addReviewLambda);
+
+
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
       restApiName: 'Movie Service',
@@ -109,6 +131,9 @@ class MovieAppInfraStack extends cdk.Stack {
     movieResource.addMethod('GET', new apigateway.LambdaIntegration(downloadMovieLambda));
 
     moviesResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));
+
+    const reviewsResource = api.root.addResource('reviews');
+    reviewsResource.addMethod('POST', new apigateway.LambdaIntegration(addReviewLambda));
 
     // CloudFront distribution for Angular app
     const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
