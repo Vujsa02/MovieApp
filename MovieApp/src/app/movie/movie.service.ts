@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import {Movie} from "./movie-metadata.model";
 import Decimal from 'decimal.js';
+import {environment} from "../../environment";
 
 @Injectable({
   providedIn: 'root'
@@ -25,7 +26,7 @@ export class MovieService {
       image: movie.image
     };
 
-    return this.http.post<any>('https://wtg0uwk5wb.execute-api.eu-central-1.amazonaws.com/prod/movies', payload).pipe(
+    return this.http.post<any>(environment.apiGatewayHost + 'movies', payload).pipe(
       switchMap(response => {
         const presignedUrl = response.presignedUrl;
 
@@ -50,11 +51,11 @@ export class MovieService {
 
   // Method to get presigned URL and download a movie
   getPresignedUrl(movieId: string): Observable<any> {
-    return this.http.get<any>(`https://wtg0uwk5wb.execute-api.eu-central-1.amazonaws.com/prod/movies/download/${movieId}`);
+    return this.http.get<any>(environment.apiGatewayHost + `movies/download/${movieId}`);
   }
 
   // Method to get movie metadata
   getMoviesMetadata(): Observable<any> {
-    return this.http.get<any>('https://wtg0uwk5wb.execute-api.eu-central-1.amazonaws.com/prod/movies');
+    return this.http.get<any>(environment.apiGatewayHost + 'movies');
   }
 }
