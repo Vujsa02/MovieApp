@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import {MovieListComponent} from "./movie-list/movie-list.component";
 import {MovieCardComponent} from "./movie-card/movie-card.component";
 import {MovieUploadComponent} from "./movie-upload/movie-upload.component";
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 
 
 
@@ -10,7 +11,9 @@ import {MovieUploadComponent} from "./movie-upload/movie-upload.component";
   declarations: [MovieListComponent],
   imports: [
     CommonModule,
-    MovieCardComponent
+    MovieCardComponent,
+    FormsModule,
+    ReactiveFormsModule
   ],
   exports: [
     MovieListComponent,
