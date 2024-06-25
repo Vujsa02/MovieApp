@@ -26,6 +26,14 @@
   width: fit-content;
 }
 
+.movie-image {
+    width: 200px;
+    height: auto;
+    border-radius: 8px;
+    display: block; /* Ensure the image is block-level */
+    margin: 0 auto 20px; /* Center align the image */
+}
+
 .image-container:hover .icon-image {
   opacity: 0.7; /* Tinted background effect */
 }

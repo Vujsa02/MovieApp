@@ -1,1 +1,17 @@
-<p>movie-details works!</p>
+<div class="parent">
+
+  <video #videoPlayer controls class="video-container" (click)="watchVideo()">
+    Your browser does not support the video tag.
+  </video>
+
+  <div *ngIf="movie" class="container">
+    <img [src]="getImageSrc()" alt="Movie Image" class="movie-image">
+    <h1 class="movie-title">{{movie.title}}</h1>
+    <p class="movie-description"><strong>Description:   </strong> {{movie.description}}</p>
+    <p class="movie-actors"><strong>Actors:   </strong>{{movie?.actors}}</p>
+    <p class="movie-genre"><strong>Genre:   </strong>{{ movie?.genre }}</p>
+    <p class="movie-duration"><strong>Duration:   </strong>{{ getRoundedDuration() }} min</p>
+    <p class="movie-director"><strong>Director:   </strong>{{movie?.director}}</p>
+  </div>
+</div>
+

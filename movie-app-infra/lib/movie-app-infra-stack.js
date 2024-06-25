@@ -154,6 +154,8 @@ class MovieAppInfraStack extends cdk.Stack {
       },
     });
 
+    movieTable.grantReadData(getMoviesMetadataLambda);
+
     const getMovieMetadataByIdLambda = new lambda.Function(this, 'GetMovieByIdFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
@@ -163,10 +165,19 @@ class MovieAppInfraStack extends cdk.Stack {
       },
     });
 
-
-
-    movieTable.grantReadData(getMoviesMetadataLambda);
     movieTable.grantReadData(getMovieMetadataByIdLambda);
+
+    const viewContentLambda = new lambda.Function(this, 'ViewContentFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'view_content.lambda_handler', // Adjust based on your lambda handler file
+      environment: {
+        MOVIE_BUCKET_NAME: movieBucket.bucketName,
+      },
+    });
+
+    // Grant permissions to access S3 bucket
+    movieBucket.grantRead(viewContentLambda);
 
 
     const addReviewLambda = new lambda.Function(this, 'AddReviewFunction', {
@@ -200,6 +211,9 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const movieByIdResource = moviesResource.addResource('{movieId}');
     movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));
+
+    const streamMovieResource = moviesResource.addResource('stream').addResource('{movieId}');
+    streamMovieResource.addMethod('GET', new apigateway.LambdaIntegration(viewContentLambda));
 
     // CloudFront distribution for Angular app
     const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {

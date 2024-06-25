@@ -4,6 +4,7 @@ import {MatCard} from "@angular/material/card";
 import {MovieService} from "../movie.service";
 import {Movie} from "../movie-metadata.model";
 import {Router} from "@angular/router";
+import {environment} from "../../../environment";
 
 @Component({
   selector: 'app-movie-card',
@@ -33,6 +34,11 @@ export class MovieCardComponent {
   }
 
   openDetailsWindow(){
-    this.router.navigate(['/details/', this.card.movieId], { state: { movie: this.card } });
+    this.router.navigate(['/details/', this.card.movieId]);
   }
+
+  getImageSrc(): string {
+    return this.card?.image ? 'data:image/jpeg;base64,' + this.card.image : environment.defaultImage;
+  }
+
 }

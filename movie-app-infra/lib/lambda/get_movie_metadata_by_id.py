@@ -8,7 +8,7 @@ movie_table = dynamodb.Table(os.environ['MOVIE_TABLE_NAME'])
 
 def lambda_handler(event, context):
     try:
-        movie_id = event['pathParameters']['id']
+        movie_id = event['pathParameters']['movieId']
         response = movie_table.get_item(Key={'movieId': movie_id})
 
         if 'Item' not in response:
