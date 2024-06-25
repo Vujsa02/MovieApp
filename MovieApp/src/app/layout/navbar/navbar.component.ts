@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import {AwsCognitoService} from "../../auth/aws-cognito.service";
-import {Router} from "@angular/router";
 import {ToastrService} from "ngx-toastr";
 
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.css'
+  styleUrls: ['./navbar.component.css'] // use styleUrls instead of styleUrl
 })
 export class NavbarComponent {
 
@@ -29,4 +29,7 @@ export class NavbarComponent {
 
   }
 
+  navigateToHome() {
+    this.router.navigate(['/home']);
+  }
 }

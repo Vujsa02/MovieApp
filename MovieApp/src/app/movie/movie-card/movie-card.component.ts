@@ -1,5 +1,4 @@
 import {Component, Input, Output} from '@angular/core';
-import {MovieCard} from "./movie-card.model";
 import EventEmitter from "node:events";
 import {MatCard} from "@angular/material/card";
 import {MovieService} from "../movie.service";
@@ -34,7 +33,6 @@ export class MovieCardComponent {
   }
 
   openDetailsWindow(){
-    this.router.navigate(['/details', this.card.movieId], { state: { movie: this.card } });
-
+    this.router.navigate(['/details/', this.card.movieId], { state: { movie: this.card } });
   }
 }

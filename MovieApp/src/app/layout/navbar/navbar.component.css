@@ -2,6 +2,10 @@ mat-toolbar {
   background-color: #3F51B5;
 }
 
+.icon-image, span {
+  cursor: pointer;
+}
+
 div {
   width: 100%;
   justify-content: flex-end;

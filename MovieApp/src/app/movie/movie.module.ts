@@ -4,8 +4,7 @@ import {MovieListComponent} from "./movie-list/movie-list.component";
 import {MovieCardComponent} from "./movie-card/movie-card.component";
 import {MovieUploadComponent} from "./movie-upload/movie-upload.component";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-
-
+import {MatFormFieldModule} from "@angular/material/form-field";
 
 @NgModule({
   declarations: [MovieListComponent],
@@ -13,7 +12,8 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
     CommonModule,
     MovieCardComponent,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatFormFieldModule
   ],
   exports: [
     MovieListComponent,
