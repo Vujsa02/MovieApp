@@ -62,4 +62,8 @@ export class MovieService {
   getMoviesMetadataById(movieId: string): Observable<any> {
     return this.http.get<any>(environment.apiGatewayHost + `movies/${movieId}`);
   }
+
+  searchMovies(criteria: object): Observable<any>{
+    return this.http.get<any>(environment.apiGatewayHost + `search`);
+  }
 }

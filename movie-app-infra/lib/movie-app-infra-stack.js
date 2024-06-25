@@ -40,8 +40,18 @@ class MovieAppInfraStack extends cdk.Stack {
       partitionKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      tableName: "mmm-movie-table"
+      tableName: "mmm-movie-table",
+      globalSecondaryIndexes: [
+        {
+          indexName: 'FlexibleSearchIndex',
+          partitionKey: { name: 'compositeKey', type: dynamodb.AttributeType.STRING },
+          projectionType: dynamodb.ProjectionType.ALL, // Adjust projection type as needed
+        }
+      ],
+
     });
+
+
 
     // User pool
 
@@ -51,6 +61,7 @@ class MovieAppInfraStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       tableName: "mmm-review-table"
     });
+
 
 
     // Cognito User Pool
@@ -117,6 +128,17 @@ class MovieAppInfraStack extends cdk.Stack {
 
     // SNS Topic for notifications
     const topic = new sns.Topic(this, 'MovieTopic');
+
+    const queryMoviesLambda = new lambda.Function(this, 'QueryMoviesFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'search_movies.lambda_handler', // Adjust the handler path and function name as per your structure
+      environment: {
+        MOVIE_TABLE_NAME: movieTable.tableName,
+        MOVIE_TABLE_GSI_NAME: 'FlexibleSearchIndex', // Assuming accessing the first GSI
+      },
+    });
+    movieTable.grantReadData(queryMoviesLambda);
 
     // Upload movie Lambda function
     const uploadMovieLambda = new lambda.Function(this, 'UploadMovieFunction', {
@@ -186,6 +208,9 @@ class MovieAppInfraStack extends cdk.Stack {
       restApiName: 'Movie Service',
       description: 'This service serves movies.',
     });
+
+    const searchMoviesResource = api.root.addResource('search');
+    searchMoviesResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesLambda));
 
     const moviesResource = api.root.addResource('movies');
     moviesResource.addMethod('POST', new apigateway.LambdaIntegration(uploadMovieLambda));
