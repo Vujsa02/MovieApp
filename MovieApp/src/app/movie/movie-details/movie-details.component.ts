@@ -69,4 +69,19 @@ export class MovieDetailsComponent {
       });
     }
   }
+
+    downloadMovie() {
+    // Implement your download logic here
+    this.movieService.getPresignedUrl(this.movie!.movieId).subscribe(response => {
+      const presignedUrl = response.presigned_url;
+      window.open(presignedUrl, '_blank');
+    }, error => {
+      console.error('Error getting presigned URL', error);
+      alert('Failed to get presigned URL');
+    });
+  }
+
+  updateMovie(){}
+  deleteMovie(){}
+
 }

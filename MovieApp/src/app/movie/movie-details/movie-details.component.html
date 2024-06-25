@@ -1,8 +1,11 @@
 <div class="parent">
 
-  <video #videoPlayer controls class="video-container" (click)="watchVideo()">
-    Your browser does not support the video tag.
+  <div style="display:flex;flex-direction: column; width: 90%">
+ <video #videoPlayer controls class="video-container" (click)="watchVideo()">
+  Your browser does not support the video tag.
   </video>
+  <button class="download-button" (click)="downloadMovie()">Download movie</button>
+  </div>
 
   <div *ngIf="movie" class="container">
     <img [src]="getImageSrc()" alt="Movie Image" class="movie-image">
@@ -12,6 +15,11 @@
     <p class="movie-genre"><strong>Genre:   </strong>{{ movie?.genre }}</p>
     <p class="movie-duration"><strong>Duration:   </strong>{{ getRoundedDuration() }} min</p>
     <p class="movie-director"><strong>Director:   </strong>{{movie?.director}}</p>
+
+    <div class="button-container">
+      <button class="update-button" (click)="updateMovie()">Edit</button>
+      <button class="delete-button" (click)="deleteMovie()">Delete</button>
+    </div>
   </div>
 </div>
 

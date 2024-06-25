@@ -21,17 +21,7 @@ export class MovieCardComponent {
   constructor(private movieService: MovieService,
               private router: Router) {}
 
-  downloadMovie() {
-    // Implement your download logic here
-    console.log(`Downloading movie: ${this.card.title}`);
-    this.movieService.getPresignedUrl(this.card.movieId).subscribe(response => {
-      const presignedUrl = response.presigned_url;
-      window.open(presignedUrl, '_blank');
-    }, error => {
-      console.error('Error getting presigned URL', error);
-      alert('Failed to get presigned URL');
-    });
-  }
+
 
   openDetailsWindow(){
     this.router.navigate(['/details/'+ this.card.movieId + "/" + this.card.createdAt]);

@@ -202,7 +202,7 @@ class MovieAppInfraStack extends cdk.Stack {
     const queryMoviesLambda = new lambda.Function(this, 'QueryMoviesFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-      handler: 'search-movies.lambda_handler', // Adjust the handler path and function name as per your structure
+      handler: 'search_movies.lambda_handler', // Adjust the handler path and function name as per your structure
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
         MOVIE_TABLE_GSI_NAME: 'FlexibleSearchIndex', // Assuming accessing the first GSI
@@ -238,28 +238,28 @@ class MovieAppInfraStack extends cdk.Stack {
 
 
     // CloudFront distribution for Angular app
-    const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
-      originConfigs: [
-        {
-          s3OriginSource: {
-            s3BucketSource: movieBucket,
-          },
-          behaviors: [{ isDefaultBehavior: true }],
-        },
-      ],
-    });
-
-    // Deploy Angular app to S3 and invalidate CloudFront cache
-    new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-      sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
-      destinationBucket: movieBucket,
-      distribution,
-      distributionPaths: ['/*'],
-    });
-
-    new cdk.CfnOutput(this, 'DistributionDomainName', {
-      value: distribution.distributionDomainName,
-    });
+    // const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
+    //   originConfigs: [
+    //     {
+    //       s3OriginSource: {
+    //         s3BucketSource: movieBucket,
+    //       },
+    //       behaviors: [{ isDefaultBehavior: true }],
+    //     },
+    //   ],
+    // });
+    //
+    // // Deploy Angular app to S3 and invalidate CloudFront cache
+    // new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+    //   sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
+    //   destinationBucket: movieBucket,
+    //   distribution,
+    //   distributionPaths: ['/*'],
+    // });
+    //
+    // new cdk.CfnOutput(this, 'DistributionDomainName', {
+    //   value: distribution.distributionDomainName,
+    // });
   }
 }
 
