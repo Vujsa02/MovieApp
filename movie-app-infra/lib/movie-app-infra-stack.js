@@ -60,6 +60,12 @@ class MovieAppInfraStack extends cdk.Stack {
       tableName: "mmm-review-table"
     });
 
+    const subscriptionTable = new dynamodb.Table(this, 'SubscriptionTable', {
+        partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        tableName: "mmm-subscription-table"
+    });
+
 
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
@@ -202,13 +208,25 @@ class MovieAppInfraStack extends cdk.Stack {
     const queryMoviesLambda = new lambda.Function(this, 'QueryMoviesFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-      handler: 'search_movies.lambda_handler', // Adjust the handler path and function name as per your structure
+      handler: 'search-movies.lambda_handler', // Adjust the handler path and function name as per your structure
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
         MOVIE_TABLE_GSI_NAME: 'FlexibleSearchIndex', // Assuming accessing the first GSI
       },
     });
+
     movieTable.grantReadData(queryMoviesLambda);
+
+    const subscribeLambda = new lambda.Function(this, 'SubscribeFunction', {
+        runtime: lambda.Runtime.PYTHON_3_9,
+        code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+        handler: 'subscribe.lambda_handler',
+        environment: {
+            SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+        },
+    });
+
+    subscriptionTable.grantWriteData(subscribeLambda);
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
@@ -221,7 +239,6 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const movieResource = moviesResource.addResource('download').addResource('{movieId}');
     movieResource.addMethod('GET', new apigateway.LambdaIntegration(downloadMovieLambda));
-
     moviesResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));
 
     const reviewsResource = api.root.addResource('reviews');
@@ -236,30 +253,34 @@ class MovieAppInfraStack extends cdk.Stack {
     const searchMoviesResource = api.root.addResource('search');
     searchMoviesResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesLambda));
 
+    const subscribeResource = api.root.addResource('subscribe');
+    subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
 
-    // CloudFront distribution for Angular app
-    // const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
-    //   originConfigs: [
-    //     {
-    //       s3OriginSource: {
-    //         s3BucketSource: movieBucket,
-    //       },
-    //       behaviors: [{ isDefaultBehavior: true }],
-    //     },
-    //   ],
-    // });
-    //
-    // // Deploy Angular app to S3 and invalidate CloudFront cache
-    // new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-    //   sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
-    //   destinationBucket: movieBucket,
-    //   distribution,
-    //   distributionPaths: ['/*'],
-    // });
-    //
-    // new cdk.CfnOutput(this, 'DistributionDomainName', {
-    //   value: distribution.distributionDomainName,
-    // });
+
+
+  //   // CloudFront distribution for Angular app
+  //   const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
+  //     originConfigs: [
+  //       {
+  //         s3OriginSource: {
+  //           s3BucketSource: movieBucket,
+  //         },
+  //         behaviors: [{ isDefaultBehavior: true }],
+  //       },
+  //     ],
+  //   });
+  //
+  //   // Deploy Angular app to S3 and invalidate CloudFront cache
+  //   new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+  //     sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
+  //     destinationBucket: movieBucket,
+  //     distribution,
+  //     distributionPaths: ['/*'],
+  //   });
+  //
+  //   new cdk.CfnOutput(this, 'DistributionDomainName', {
+  //     value: distribution.distributionDomainName,
+  //   });
   }
 }
 

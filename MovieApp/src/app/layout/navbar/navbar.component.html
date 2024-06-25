@@ -3,18 +3,17 @@
   <span style="font-size: 26px" (click)="navigateToHome()">Cine Cloud</span>
   <div class="separator"></div>
   <div style="margin-left: auto">
-
     <ng-container *ngIf="!isLoggedIn(); else loggedInTemplate">
       <a class="nav-item" routerLink="/login">Login</a>
       <div class="separator"></div>
       <a class="nav-item" routerLink="/register">Register</a>
     </ng-container>
     <ng-template #loggedInTemplate>
+      <a class="nav-item" routerLink="/subscribe">Subscription</a>
+      <div class="separator"></div>
       <a class="nav-item" (click)="logout()">Logout</a>
       <div class="separator"></div>
       <a class="nav-item" routerLink="/upload">Upload movie</a>
-      <div class="separator"></div>
-      <a class="nav-item" routerLink="/home">Home</a>
 
     </ng-template>
   </div>
