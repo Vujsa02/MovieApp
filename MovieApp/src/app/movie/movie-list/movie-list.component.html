@@ -25,5 +25,7 @@
 
 <button class="nav-item" (click)="searchMovies()">Search</button>
 </div>
-<app-movie-card *ngFor="let movie of movies" [card]="movie"></app-movie-card>
+<div class="side-by-side">
+  <app-movie-card *ngFor="let movie of movies" [card]="movie"></app-movie-card>
+</div>
 

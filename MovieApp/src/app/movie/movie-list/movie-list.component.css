@@ -55,6 +55,14 @@ button {
   background-color: #536DFE; /* slightly brighter color on hover */
 }
 
-.movie-list app-movie-card {
+.movie-list{
   margin-right: 10px;
+}
+.app-movie-card{
+  margin-right: 20px;
+  padding: 20px;
+}
+.side-by-side {
+  margin: 20px;
+  display: flex;
 }

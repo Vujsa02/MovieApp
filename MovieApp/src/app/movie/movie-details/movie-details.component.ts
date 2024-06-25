@@ -27,15 +27,16 @@ export class MovieDetailsComponent {
 
   ngOnInit() {
     this.route.params.subscribe((params) => {
-      const id = params['_id'];
-      this.movieService.getMoviesMetadataById(id).subscribe({
+      const movieId = params['movieId'];
+      const createdAt = params['createdAt'];
+      this.movieService.getMoviesMetadataById(movieId, createdAt).subscribe({
         next: (data: any)=>{
           this.movie = data[0];
           console.log(this.movie);
           this.cdr.detectChanges();
         },
-      error: (_) => {
-        console.log("Greska!");
+      error: (err) => {
+        console.log(err);
       }
 
       })
@@ -44,7 +45,7 @@ export class MovieDetailsComponent {
 
 
   getImageSrc(): string {
-    return this.movie?.image ? 'data:image/jpeg;base64,' + this.movie.image : environment.defaultImage;
+    return this.movie?.image ?  this.movie.image : environment.defaultImage;
   }
 
    getRoundedDuration(): number {

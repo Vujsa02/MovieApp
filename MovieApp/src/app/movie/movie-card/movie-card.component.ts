@@ -34,11 +34,11 @@ export class MovieCardComponent {
   }
 
   openDetailsWindow(){
-    this.router.navigate(['/details/', this.card.movieId]);
+    this.router.navigate(['/details/'+ this.card.movieId + "/" + this.card.createdAt]);
   }
 
   getImageSrc(): string {
-    return this.card?.image ? 'data:image/jpeg;base64,' + this.card.image : environment.defaultImage;
+    return this.card?.image ? this.card.image : environment.defaultImage;
   }
 
 }

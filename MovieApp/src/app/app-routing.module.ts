@@ -12,7 +12,7 @@ const routes: Routes = [
   { path: 'home', component:HomeComponent, canActivate:[AuthGuard] },
   { path: 'register', component: RegisterComponent },
   { path: 'login', component: LoginComponent },
-  { path: 'details/:_id', component:MovieDetailsComponent },
+  { path: 'details/:movieId/:createdAt', component:MovieDetailsComponent },
   { path: 'upload', component:MovieUploadComponent },];
 @NgModule({
   imports: [RouterModule.forRoot(routes)],

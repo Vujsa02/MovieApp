@@ -40,7 +40,15 @@ class MovieAppInfraStack extends cdk.Stack {
       partitionKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      tableName: "mmm-movie-table"
+      tableName: "mmm-movie-table",
+      globalSecondaryIndexes: [
+        {
+          indexName: 'FlexibleSearchIndex',
+          partitionKey: { name: 'compositeKey', type: dynamodb.AttributeType.STRING },
+          projectionType: dynamodb.ProjectionType.ALL, // Adjust projection type as needed
+        }
+      ],
+
     });
 
     // User pool
@@ -156,10 +164,10 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieTable.grantReadData(getMoviesMetadataLambda);
 
-    const getMovieMetadataByIdLambda = new lambda.Function(this, 'GetMovieByIdFunction', {
+    const getMovieMetadataByIdLambda = new lambda.Function(this, 'GetMovieMetadataByIdFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-      handler: 'get_movie_by_id.lambda_handler',
+      handler: 'get_movie_metadata_by_id.lambda_handler',
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
       },
@@ -191,6 +199,16 @@ class MovieAppInfraStack extends cdk.Stack {
 
     reviewTable.grantWriteData(addReviewLambda);
 
+    const queryMoviesLambda = new lambda.Function(this, 'QueryMoviesFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'search-movies.lambda_handler', // Adjust the handler path and function name as per your structure
+      environment: {
+        MOVIE_TABLE_NAME: movieTable.tableName,
+        MOVIE_TABLE_GSI_NAME: 'FlexibleSearchIndex', // Assuming accessing the first GSI
+      },
+    });
+    movieTable.grantReadData(queryMoviesLambda);
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
@@ -210,10 +228,14 @@ class MovieAppInfraStack extends cdk.Stack {
     reviewsResource.addMethod('POST', new apigateway.LambdaIntegration(addReviewLambda));
 
     const movieByIdResource = moviesResource.addResource('{movieId}');
-    movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMoviesMetadataLambda));
+    movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMovieMetadataByIdLambda));
 
     const streamMovieResource = moviesResource.addResource('stream').addResource('{movieId}');
     streamMovieResource.addMethod('GET', new apigateway.LambdaIntegration(viewContentLambda));
+
+    const searchMoviesResource = api.root.addResource('search');
+    searchMoviesResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesLambda));
+
 
     // CloudFront distribution for Angular app
     const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
