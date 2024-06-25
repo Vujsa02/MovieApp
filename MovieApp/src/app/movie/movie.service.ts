@@ -60,7 +60,7 @@ export class MovieService {
   }
 
   getMoviesMetadataById(movieId: string, createdAt: string): Observable<any> {
-    return this.http.get<any>(environment.apiGatewayHost + `movies/${movieId}?${createdAt}`);
+    return this.http.get<any>(environment.apiGatewayHost + `movies/${movieId}?createdAt=${createdAt}`);
   }
 
    getMovieStreamUrl(movieId: string) {
@@ -70,4 +70,8 @@ export class MovieService {
   searchMovies(criteria: object): Observable<any>{
     return this.http.get<any>(environment.apiGatewayHost + `search`);
   }
+  deleteMovie(movieId: string, createdAt: string): Observable<any> {
+    return this.http.delete<any>(environment.apiGatewayHost + `movies/${movieId}?createdAt=${createdAt}`);
+  }
+
 }

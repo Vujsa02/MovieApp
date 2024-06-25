@@ -1,0 +1,62 @@
+/* confirm-delete-dialog.component.css */
+:host {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000; /* Ensure the dialog is above other elements */
+  background-color: white; /* Optional: to ensure the dialog has a background */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Optional: to give it a raised appearance */
+  padding: 20px; /* Optional: padding for better appearance */
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  border-radius: 10px; /* Rounded corners */
+}
+
+.dialog-title {
+  font-size: 20px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.dialog-content {
+  margin-bottom: 20px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: space-around;
+}
+
+.yes-dialog-button {
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:150px;
+  font-weight: bold;
+}
+
+.yes-dialog-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+.no-dialog-button {
+  background-color: #bc544b; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:150px;
+  font-weight: bold;
+}
+
+.no-dialog-button:hover {
+  background-color: #ce645a; /* Darker blue on hover */
+}

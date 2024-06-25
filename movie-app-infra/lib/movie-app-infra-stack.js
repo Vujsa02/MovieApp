@@ -48,29 +48,27 @@ class MovieAppInfraStack extends cdk.Stack {
           projectionType: dynamodb.ProjectionType.ALL, // Adjust projection type as needed
         }
       ],
-
     });
 
-    // User pool
-
+    // DynamoDB table for reviews
     const reviewTable = new dynamodb.Table(this, 'ReviewTable', {
       partitionKey: { name: 'reviewId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      tableName: "mmm-review-table"
+      tableName: "mmm-review-table",
     });
 
+    // DynamoDB table for subscriptions
     const subscriptionTable = new dynamodb.Table(this, 'SubscriptionTable', {
-        partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        tableName: "mmm-subscription-table"
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      tableName: "mmm-subscription-table",
     });
-
 
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
       selfSignUpEnabled: true,
-      signInAliases: { email: true, username: true},
+      signInAliases: { email: true, username: true },
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,
@@ -78,12 +76,11 @@ class MovieAppInfraStack extends cdk.Stack {
         requireDigits: true,
       },
       autoVerify: { email: true },
-      userVerification:{
+      userVerification: {
         emailSubject: "Verify your email address",
         emailBody: "Hello, Thanks for signing up to our app! Click here to verify your email address {##Verify Email##}",
         emailStyle: cognito.VerificationEmailStyle.LINK,
       },
-
       standardAttributes: {
         email: {
           mutable: true,
@@ -100,8 +97,8 @@ class MovieAppInfraStack extends cdk.Stack {
         birthdate: {
           mutable: true,
           required: true,
-        }
-      }
+        },
+      },
     });
 
     // App Client
@@ -193,7 +190,6 @@ class MovieAppInfraStack extends cdk.Stack {
     // Grant permissions to access S3 bucket
     movieBucket.grantRead(viewContentLambda);
 
-
     const addReviewLambda = new lambda.Function(this, 'AddReviewFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
@@ -208,7 +204,7 @@ class MovieAppInfraStack extends cdk.Stack {
     const queryMoviesLambda = new lambda.Function(this, 'QueryMoviesFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-      handler: 'search-movies.lambda_handler', // Adjust the handler path and function name as per your structure
+      handler: 'search_movies.lambda_handler', // Adjust the handler path and function name as per your structure
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
         MOVIE_TABLE_GSI_NAME: 'FlexibleSearchIndex', // Assuming accessing the first GSI
@@ -218,15 +214,29 @@ class MovieAppInfraStack extends cdk.Stack {
     movieTable.grantReadData(queryMoviesLambda);
 
     const subscribeLambda = new lambda.Function(this, 'SubscribeFunction', {
-        runtime: lambda.Runtime.PYTHON_3_9,
-        code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-        handler: 'subscribe.lambda_handler',
-        environment: {
-            SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
-        },
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'subscribe.lambda_handler',
+      environment: {
+        SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+      },
     });
 
     subscriptionTable.grantWriteData(subscribeLambda);
+
+    // Delete movie Lambda function
+    const deleteMovieLambda = new lambda.Function(this, 'DeleteMovieFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'delete_movie.lambda_handler',
+      environment: {
+        MOVIE_BUCKET_NAME: movieBucket.bucketName,
+        MOVIE_TABLE_NAME: movieTable.tableName,
+      },
+    });
+
+    movieBucket.grantDelete(deleteMovieLambda);
+    movieTable.grantReadWriteData(deleteMovieLambda);
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
@@ -246,6 +256,8 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const movieByIdResource = moviesResource.addResource('{movieId}');
     movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMovieMetadataByIdLambda));
+    movieByIdResource.addMethod('DELETE', new apigateway.LambdaIntegration(deleteMovieLambda));
+
 
     const streamMovieResource = moviesResource.addResource('stream').addResource('{movieId}');
     streamMovieResource.addMethod('GET', new apigateway.LambdaIntegration(viewContentLambda));
@@ -256,31 +268,31 @@ class MovieAppInfraStack extends cdk.Stack {
     const subscribeResource = api.root.addResource('subscribe');
     subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
 
+    // Add DELETE method for delete movie Lambda function
 
+    // // CloudFront distribution for Angular app
+    // const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
+    //   originConfigs: [
+    //     {
+    //       s3OriginSource: {
+    //         s3BucketSource: movieBucket,
+    //       },
+    //       behaviors: [{ isDefaultBehavior: true }],
+    //     },
+    //   ],
+    // });
 
-  //   // CloudFront distribution for Angular app
-  //   const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
-  //     originConfigs: [
-  //       {
-  //         s3OriginSource: {
-  //           s3BucketSource: movieBucket,
-  //         },
-  //         behaviors: [{ isDefaultBehavior: true }],
-  //       },
-  //     ],
-  //   });
-  //
-  //   // Deploy Angular app to S3 and invalidate CloudFront cache
-  //   new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-  //     sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
-  //     destinationBucket: movieBucket,
-  //     distribution,
-  //     distributionPaths: ['/*'],
-  //   });
-  //
-  //   new cdk.CfnOutput(this, 'DistributionDomainName', {
-  //     value: distribution.distributionDomainName,
-  //   });
+    // // Deploy Angular app to S3 and invalidate CloudFront cache
+    // new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+    //   sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
+    //   destinationBucket: movieBucket,
+    //   distribution,
+    //   distributionPaths: ['/*'],
+    // });
+
+    // new cdk.CfnOutput(this, 'DistributionDomainName', {
+    //   value: distribution.distributionDomainName,
+    // });
   }
 }
 

@@ -37,7 +37,7 @@ body {
 }
 .movie-image {
     width: 250px;
-    height: auto;
+    height: 270px;
     border-radius: 8px;
     display: block; /* Ensure the image is block-level */
     margin: 0 auto 20px; /* Center align the image */
@@ -47,7 +47,7 @@ body {
   margin-right: 50px;
   margin-left:20px;
   width:90%;
-  height: 700px;
+  height: 600px;
   background-color: #fff;
   padding: 20px;
   border-radius: 8px;
