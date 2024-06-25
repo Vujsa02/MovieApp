@@ -13,7 +13,7 @@ import {MatButtonModule} from "@angular/material/button";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {ToastrModule} from "ngx-toastr";
-import {SubscribeComponent} from "./subscribe/subscribe.component";
+import {SubscribeComponent} from "./sub/subscribe/subscribe.component";
 import {MatListOption, MatSelectionList} from "@angular/material/list";
 import {MaterialModule} from "./infrastructure/material/material.module";
 

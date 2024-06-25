@@ -6,7 +6,7 @@ import {LoginComponent} from "./auth/login/login.component";
 import {AuthGuard} from "./auth/auth-guard.service";
 import {MovieDetailsComponent} from "./movie/movie-details/movie-details.component";
 import {MovieUploadComponent} from "./movie/movie-upload/movie-upload.component";
-import {SubscribeComponent} from "./subscribe/subscribe.component";
+import {SubscribeComponent} from "./sub/subscribe/subscribe.component";
 
 const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },

@@ -1,6 +1,9 @@
 import {Component, OnInit} from '@angular/core';
-import {MovieService} from "../movie/movie.service";
-import {Movie} from "../movie/movie-metadata.model";
+import {MovieService} from "../../movie/movie.service";
+import {Movie} from "../../movie/movie-metadata.model";
+import {SubscriptionService} from "../subscription.service";
+import {AwsCognitoService} from "../../auth/aws-cognito.service";
+import {ToastrService} from "ngx-toastr";
 
 
 @Component({
@@ -11,7 +14,10 @@ import {Movie} from "../movie/movie-metadata.model";
 export class SubscribeComponent implements OnInit{
 
   constructor(
-    private movieService: MovieService
+    private movieService: MovieService,
+    private subscriptionService: SubscriptionService,
+    private cognitoService: AwsCognitoService,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit() {
@@ -51,9 +57,15 @@ export class SubscribeComponent implements OnInit{
 
 
   subscribe() {
-    console.log('Selected Actors:', this.selectedActors);
-    console.log('Selected Directors:', this.selectedDirectors);
-    console.log('Selected Genres:', this.selectedGenres);
-    // Ovde možete dodati logiku za slanje notifikacija ili čuvanje podataka
+    const subscriptions: string[] = this.selectedActors.concat(this.selectedDirectors, this.selectedGenres);
+    this.subscriptionService.subscribe(this.cognitoService.getCurrentUserEmail(), subscriptions).subscribe(() => {
+      this.toastr.success('Successfully subscribed!');
+    }, (error) => {
+      console.error(error);
+      this.toastr.error('Subscription failed!');
+    });
   }
+
+
+
 }
