@@ -1,0 +1,33 @@
+<div class="container">
+  <h1>Subscription</h1>
+  <div class="lists">
+    <div class="list-container">
+      <h2>Actors</h2>
+      <input type="text" placeholder="Search Actors" [(ngModel)]="actorFilter" />
+      <mat-selection-list [(ngModel)]="selectedActors">
+        <mat-list-option *ngFor="let actor of filteredActors()" [value]="actor">
+          {{ actor }}
+        </mat-list-option>
+      </mat-selection-list>
+    </div>
+    <div class="list-container">
+      <h2>Directors</h2>
+      <input type="text" placeholder="Search Directors" [(ngModel)]="directorFilter" />
+      <mat-selection-list [(ngModel)]="selectedDirectors">
+        <mat-list-option *ngFor="let director of filteredDirectors()" [value]="director">
+          {{ director }}
+        </mat-list-option>
+      </mat-selection-list>
+    </div>
+    <div class="list-container">
+      <h2>Genres</h2>
+      <input type="text" placeholder="Search Genres" [(ngModel)]="genreFilter" />
+      <mat-selection-list [(ngModel)]="selectedGenres">
+        <mat-list-option *ngFor="let genre of filteredGenres()" [value]="genre">
+          {{ genre }}
+        </mat-list-option>
+      </mat-selection-list>
+    </div>
+  </div>
+  <button mat-raised-button color="primary" (click)="subscribe()">Subscribe</button>
+</div>
