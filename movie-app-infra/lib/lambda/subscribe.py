@@ -34,9 +34,7 @@ def lambda_handler(event, context):
         # Save subscription to DynamoDB
         print('Saving subscription to DynamoDB:', db_params)
         table.put_item(
-            Item=db_params,
-            ConditionExpression="attribute_not_exists(email) OR email = :email",
-            ExpressionAttributeValues={':email': email}
+            Item=db_params
         )
         print('Subscription saved to DynamoDB')
 
