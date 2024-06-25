@@ -18,6 +18,7 @@ const userPool = new CognitoUserPool(poolData);
   providedIn: 'root'
 })
 export class AwsCognitoService {
+  private userEmail: string = '';
 
   register(username: string, password: string, email: string, firstName: string, lastName: string, birthdate: string) {
     const attributeList = [
@@ -55,6 +56,7 @@ export class AwsCognitoService {
       cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: (result) => {
           resolve(result);
+          this.userEmail = result.getIdToken().payload['email'];
         },
         onFailure: (err) => {
           reject(err);
@@ -73,5 +75,10 @@ export class AwsCognitoService {
   isLoggedIn(): boolean {
     const user = userPool.getCurrentUser();
     return user !== null;
+  }
+
+  // get current user email attribute
+  getCurrentUserEmail(): string {
+    return this.userEmail;
   }
 }
