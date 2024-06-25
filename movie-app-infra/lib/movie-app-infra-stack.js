@@ -52,6 +52,12 @@ class MovieAppInfraStack extends cdk.Stack {
       tableName: "mmm-review-table"
     });
 
+    const subscriptionTable = new dynamodb.Table(this, 'SubscriptionTable', {
+        partitionKey: { name: 'subscriptionId', type: dynamodb.AttributeType.STRING },
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        tableName: "mmm-subscription-table"
+    });
+
 
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
@@ -180,6 +186,16 @@ class MovieAppInfraStack extends cdk.Stack {
 
     reviewTable.grantWriteData(addReviewLambda);
 
+    const subscribeLambda = new lambda.Function(this, 'SubscribeFunction', {
+        runtime: lambda.Runtime.PYTHON_3_9,
+        code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+        handler: 'subscribe.lambda_handler',
+        environment: {
+            SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+        },
+    });
+
+    subscriptionTable.grantWriteData(subscribeLambda);
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
