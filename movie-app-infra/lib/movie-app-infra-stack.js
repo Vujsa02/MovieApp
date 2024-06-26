@@ -48,10 +48,23 @@ class MovieAppInfraStack extends cdk.Stack {
     });
 
     movieTable.addGlobalSecondaryIndex({
-      indexName: 'FlexibleSearchIndex',
-      partitionKey: { name: 'compositeKey', type: dynamodb.AttributeType.STRING },
-      projectionType: dynamodb.ProjectionType.ALL, // Adjust projection type as needed
+      indexName: 'TitleIndex',
+      partitionKey: { name: 'title', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
     });
+
+    movieTable.addGlobalSecondaryIndex({
+          indexName: 'DirectorIndex',
+          partitionKey: { name: 'director', type: dynamodb.AttributeType.STRING },
+          projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+    movieTable.addGlobalSecondaryIndex({
+      indexName: 'DescriptionIndex',
+      partitionKey: { name: 'description', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
 
     // User pool
 
@@ -223,10 +236,9 @@ class MovieAppInfraStack extends cdk.Stack {
     const queryMoviesLambda = new lambda.Function(this, 'QueryMoviesFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-      handler: 'search_movies.lambda_handler', // Adjust the handler path and function name as per your structure
+      handler: 'search_movies.lambda_handler',
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
-        MOVIE_TABLE_GSI_NAME: 'FlexibleSearchIndex', // Assuming accessing the first GSI
       },
     });
 
@@ -237,7 +249,11 @@ class MovieAppInfraStack extends cdk.Stack {
       actions: ['dynamodb:Query'],
       resources: [
         movieTable.tableArn,
-        `${movieTable.tableArn}/index/FlexibleSearchIndex`, // Include the index ARN
+        `${movieTable.tableArn}/index/TitleIndex`,
+        `${movieTable.tableArn}/index/DirectorIndex`,
+        `${movieTable.tableArn}/index/GenreIndex`,
+        `${movieTable.tableArn}/index/ActorsIndex`,
+        `${movieTable.tableArn}/index/DescriptionIndex`,
       ],
     });
 
