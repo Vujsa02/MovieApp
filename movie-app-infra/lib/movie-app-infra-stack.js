@@ -100,6 +100,20 @@ class MovieAppInfraStack extends cdk.Stack {
       tableName: "mmm-subscription-table",
     });
 
+    // DynamoDB table for userFeed
+    const userFeedTable = new dynamodb.Table(this, 'UserFeedTable', {
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      tableName: "mmm-user-feed-table",
+    });
+
+    // DynamoDB table for userInteractions
+    const userInteractionsTable = new dynamodb.Table(this, 'UserInteractionsTable', {
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      tableName: "mmm-user-interactions-table",
+    });
+
 
     // SQS Queue for Email Notifications
     const emailQueue = new sqs.Queue(this, 'EmailQueue', {
@@ -197,6 +211,21 @@ class MovieAppInfraStack extends cdk.Stack {
     genresTable.grantWriteData(uploadMovieLambda);
     actorsTable.grantWriteData(uploadMovieLambda);
 
+    const updateMovieLambda = new lambda.Function(this, 'UpdateMovieFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'update_movie.lambda_handler',
+      environment: {
+        MOVIE_BUCKET_NAME: movieBucket.bucketName,
+        MOVIE_TABLE_NAME: movieTable.tableName,
+        SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+        EMAIL_QUEUE_URL: emailQueue.queueUrl,
+      },
+    });
+
+    movieBucket.grantPut(updateMovieLambda);
+    movieTable.grantWriteData(updateMovieLambda);
+
     // Download movie Lambda function
     const downloadMovieLambda = new lambda.Function(this, 'DownloadMovieFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -292,7 +321,8 @@ class MovieAppInfraStack extends cdk.Stack {
         code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
         handler: 'subscribe.lambda_handler',
         environment: {
-            SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+          SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+          INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
         },
     });
     subscribeLambda.addToRolePolicy(new PolicyStatement({
@@ -303,6 +333,9 @@ class MovieAppInfraStack extends cdk.Stack {
     subscriptionTable.grantWriteData(subscribeLambda);
     subscriptionTable.grantReadData(uploadMovieLambda);
     emailQueue.grantSendMessages(uploadMovieLambda);
+    userInteractionsTable.grantReadWriteData(subscribeLambda);
+    userInteractionsTable.grantReadWriteData(updateMovieLambda);
+    userInteractionsTable.grantReadWriteData(addReviewLambda);
 
     // Lambda Function for Sending Emails
     const sendEmailLambda = new lambda.Function(this, 'SendEmailFunction', {
@@ -359,7 +392,7 @@ class MovieAppInfraStack extends cdk.Stack {
     const movieByIdResource = moviesResource.addResource('{movieId}');
     movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMovieMetadataByIdLambda));
     movieByIdResource.addMethod('DELETE', new apigateway.LambdaIntegration(deleteMovieLambda));
-
+    movieByIdResource.addMethod('PUT', new apigateway.LambdaIntegration(updateMovieLambda));
 
     const streamMovieResource = moviesResource.addResource('stream').addResource('{movieId}');
     streamMovieResource.addMethod('GET', new apigateway.LambdaIntegration(viewContentLambda));

@@ -4,7 +4,10 @@
  <video #videoPlayer controls class="video-container" (click)="watchVideo()">
   Your browser does not support the video tag.
   </video>
-  <button class="download-button" (click)="downloadMovie()">Download movie</button>
+    <div class="side-by-side">
+        <button class="download-button" (click)="downloadMovie()">Download movie</button>
+        <button class="download-button" (click)="openReviewDialog()">Add your review</button>
+    </div>
   </div>
 
   <div *ngIf="movie" class="container">

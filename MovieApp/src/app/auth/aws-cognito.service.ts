@@ -57,6 +57,7 @@ export class AwsCognitoService {
         onSuccess: (result) => {
           resolve(result);
           this.userEmail = result.getIdToken().payload['email'];
+          localStorage.setItem('token', result.getIdToken().getJwtToken());
         },
         onFailure: (err) => {
           reject(err);
@@ -80,5 +81,11 @@ export class AwsCognitoService {
   // get current user email attribute
   getCurrentUserEmail(): string {
     return this.userEmail;
+  }
+
+  // get current username
+  getCurrentUsername(): string {
+    const user = userPool.getCurrentUser();
+    return user?.getUsername() || '';
   }
 }

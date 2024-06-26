@@ -5,13 +5,16 @@ import boto3
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['SUBSCRIPTION_TABLE_NAME'])
-
+interactions_table = dynamodb.Table(os.environ['INTERACTIONS_TABLE_NAME'])
 
 # table saves user emails and the list of strings they are subscribed to
 def lambda_handler(event, context):
     body = json.loads(event['body'])
     email = body['email']
     subscriptions = body['subscriptions']
+    username = body['username']
+    print('User:', username)
+
 
     # Validate the subscriptions
     if not all(isinstance(sub, str) for sub in subscriptions):
@@ -39,6 +42,26 @@ def lambda_handler(event, context):
             Item=db_params
         )
         print('Subscription saved to DynamoDB')
+
+
+        # update interactions table
+        response = interactions_table.get_item(Key={'userId': username})
+        if 'Item' in response:
+            interactions = response['Item']
+            for sub in subscriptions:
+                if sub in interactions:
+                    interactions[sub] += 1
+                else:
+                    interactions[sub] = 1
+            interactions_table.put_item(Item=interactions)
+        else:
+            interactions = {sub: 1 for sub in subscriptions}
+            interactions['userId'] = username
+            interactions_table.put_item(Item=interactions)
+
+        print('Interactions saved to DynamoDB')
+
+
 
         print('Verifying email identity:', email)
         res = ses.verify_email_identity(

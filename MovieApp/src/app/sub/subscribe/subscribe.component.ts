@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {MovieService} from "../../movie/movie.service";
-import {Movie} from "../../movie/movie-metadata.model";
+import {Genre, Movie} from "../../movie/movie-metadata.model";
 import {SubscriptionService} from "../subscription.service";
 import {AwsCognitoService} from "../../auth/aws-cognito.service";
 import {ToastrService} from "ngx-toastr";
@@ -25,7 +25,7 @@ export class SubscribeComponent implements OnInit{
       this.movies = movies;
       this.actors = this.movies.map(movie => movie.actors).flat().filter((actor, index, self) => self.indexOf(actor) === index);
       this.directors = this.movies.map(movie => movie.director).filter((director, index, self) => self.indexOf(director) === index);
-      this.genres = this.movies.map(movie => movie.genre).flat().filter((genre, index, self) => self.indexOf(genre) === index);
+      this.genres = Object.values(Genre);
     });
   }
 
@@ -43,6 +43,10 @@ export class SubscribeComponent implements OnInit{
   directorFilter = '';
   genreFilter = '';
 
+  newActor: string = '';
+  newDirector: string = '';
+  newGenre: string = '';
+
   filteredActors() {
     return this.actors.filter(actor => actor.toLowerCase().includes(this.actorFilter.toLowerCase()));
   }
@@ -55,10 +59,30 @@ export class SubscribeComponent implements OnInit{
     return this.genres.filter(genre => genre.toLowerCase().includes(this.genreFilter.toLowerCase()));
   }
 
+  addActor() {
+    if (this.newActor && !this.actors.includes(this.newActor)) {
+      this.actors.push(this.newActor);
+      this.newActor = '';
+    }
+  }
+
+  addDirector() {
+    if (this.newDirector && !this.directors.includes(this.newDirector)) {
+      this.directors.push(this.newDirector);
+      this.newDirector = '';
+    }
+  }
+
+  addGenre() {
+    if (this.newGenre && !this.genres.includes(this.newGenre)) {
+      this.genres.push(this.newGenre);
+      this.newGenre = '';
+    }
+  }
 
   subscribe() {
     const subscriptions: string[] = this.selectedActors.concat(this.selectedDirectors, this.selectedGenres);
-    this.subscriptionService.subscribe(this.cognitoService.getCurrentUserEmail(), subscriptions).subscribe(() => {
+    this.subscriptionService.subscribe(this.cognitoService.getCurrentUserEmail(), subscriptions, this.cognitoService.getCurrentUsername()).subscribe(() => {
       this.toastr.success('Successfully subscribed!');
     }, (error) => {
       console.error(error);
