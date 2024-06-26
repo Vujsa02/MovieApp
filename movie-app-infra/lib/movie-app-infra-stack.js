@@ -8,7 +8,11 @@ const sns = require('aws-cdk-lib/aws-sns');
 const subscriptions = require('aws-cdk-lib/aws-sns-subscriptions');
 const cloudfront = require('aws-cdk-lib/aws-cloudfront');
 const s3deploy = require('aws-cdk-lib/aws-s3-deployment');
+const iam = require('aws-cdk-lib/aws-iam');
 const path = require('path');
+const sqs = require('aws-cdk-lib/aws-sqs');
+const {PolicyStatement} = require("aws-cdk-lib/aws-iam");
+const eventSources = require('aws-cdk-lib/aws-lambda-event-sources');
 
 class MovieAppInfraStack extends cdk.Stack {
   constructor(scope, id, props) {
@@ -41,13 +45,24 @@ class MovieAppInfraStack extends cdk.Stack {
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       tableName: "mmm-movie-table",
-      globalSecondaryIndexes: [
-        {
-          indexName: 'FlexibleSearchIndex',
-          partitionKey: { name: 'compositeKey', type: dynamodb.AttributeType.STRING },
-          projectionType: dynamodb.ProjectionType.ALL, // Adjust projection type as needed
-        }
-      ],
+    });
+
+    movieTable.addGlobalSecondaryIndex({
+      indexName: 'TitleIndex',
+      partitionKey: { name: 'title', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    movieTable.addGlobalSecondaryIndex({
+          indexName: 'DirectorIndex',
+          partitionKey: { name: 'director', type: dynamodb.AttributeType.STRING },
+          projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+    movieTable.addGlobalSecondaryIndex({
+      indexName: 'DescriptionIndex',
+      partitionKey: { name: 'description', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
     });
 
     // DynamoDB table for reviews
@@ -65,10 +80,22 @@ class MovieAppInfraStack extends cdk.Stack {
       tableName: "mmm-subscription-table",
     });
 
+
+    // SQS Queue for Email Notifications
+    const emailQueue = new sqs.Queue(this, 'EmailQueue', {
+      queueName: 'mmm-email-queue',
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Output SQS Queue URL
+    new cdk.CfnOutput(this, 'EmailQueueUrl', {
+      value: emailQueue.queueUrl,
+    });
+
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
       selfSignUpEnabled: true,
-      signInAliases: { email: true, username: true },
+      signInAliases: { email: true, username: true},
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,
@@ -76,11 +103,12 @@ class MovieAppInfraStack extends cdk.Stack {
         requireDigits: true,
       },
       autoVerify: { email: true },
-      userVerification: {
+      userVerification:{
         emailSubject: "Verify your email address",
         emailBody: "Hello, Thanks for signing up to our app! Click here to verify your email address {##Verify Email##}",
         emailStyle: cognito.VerificationEmailStyle.LINK,
       },
+
       standardAttributes: {
         email: {
           mutable: true,
@@ -137,6 +165,8 @@ class MovieAppInfraStack extends cdk.Stack {
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
         MOVIE_TABLE_NAME: movieTable.tableName,
+        SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+        EMAIL_QUEUE_URL: emailQueue.queueUrl,
       },
     });
 
@@ -190,6 +220,7 @@ class MovieAppInfraStack extends cdk.Stack {
     // Grant permissions to access S3 bucket
     movieBucket.grantRead(viewContentLambda);
 
+
     const addReviewLambda = new lambda.Function(this, 'AddReviewFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
@@ -204,25 +235,67 @@ class MovieAppInfraStack extends cdk.Stack {
     const queryMoviesLambda = new lambda.Function(this, 'QueryMoviesFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-      handler: 'search_movies.lambda_handler', // Adjust the handler path and function name as per your structure
+      handler: 'search_movies.lambda_handler',
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
-        MOVIE_TABLE_GSI_NAME: 'FlexibleSearchIndex', // Assuming accessing the first GSI
       },
     });
 
     movieTable.grantReadData(queryMoviesLambda);
 
+    const queryMoviesPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['dynamodb:Query'],
+      resources: [
+        movieTable.tableArn,
+        `${movieTable.tableArn}/index/TitleIndex`,
+        `${movieTable.tableArn}/index/DirectorIndex`,
+        `${movieTable.tableArn}/index/GenreIndex`,
+        `${movieTable.tableArn}/index/ActorsIndex`,
+        `${movieTable.tableArn}/index/DescriptionIndex`,
+      ],
+    });
+
+    queryMoviesLambda.addToRolePolicy(queryMoviesPolicy);
+
     const subscribeLambda = new lambda.Function(this, 'SubscribeFunction', {
+        runtime: lambda.Runtime.PYTHON_3_9,
+        code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+        handler: 'subscribe.lambda_handler',
+        environment: {
+            SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+        },
+    });
+    subscribeLambda.addToRolePolicy(new PolicyStatement({
+      actions:['ses:VerifyEmailIdentity'],
+      resources: ['*'],
+    }));
+
+    subscriptionTable.grantWriteData(subscribeLambda);
+    subscriptionTable.grantReadData(uploadMovieLambda);
+    emailQueue.grantSendMessages(uploadMovieLambda);
+
+    // Lambda Function for Sending Emails
+    const sendEmailLambda = new lambda.Function(this, 'SendEmailFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
+      handler: 'send_message.lambda_handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-      handler: 'subscribe.lambda_handler',
       environment: {
-        SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+        EMAIL_QUEUE_URL: emailQueue.queueUrl,
+        SENDER_EMAIL: 'bakibookingteam17@gmail.com',
       },
     });
 
-    subscriptionTable.grantWriteData(subscribeLambda);
+    sendEmailLambda.addToRolePolicy(new PolicyStatement({
+      actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+      resources: ['*'],
+    }));
+
+    // Event Source Mapping for SQS
+    const eventSource = new eventSources.SqsEventSource(emailQueue, {
+      batchSize: 10,
+    });
+    sendEmailLambda.addEventSource(eventSource);
 
     // Delete movie Lambda function
     const deleteMovieLambda = new lambda.Function(this, 'DeleteMovieFunction', {
@@ -263,36 +336,36 @@ class MovieAppInfraStack extends cdk.Stack {
     streamMovieResource.addMethod('GET', new apigateway.LambdaIntegration(viewContentLambda));
 
     const searchMoviesResource = api.root.addResource('search');
-    searchMoviesResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesLambda));
+    searchMoviesResource.addMethod('POST', new apigateway.LambdaIntegration(queryMoviesLambda));
 
     const subscribeResource = api.root.addResource('subscribe');
     subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
 
-    // Add DELETE method for delete movie Lambda function
 
-    // // CloudFront distribution for Angular app
-    // const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
-    //   originConfigs: [
-    //     {
-    //       s3OriginSource: {
-    //         s3BucketSource: movieBucket,
-    //       },
-    //       behaviors: [{ isDefaultBehavior: true }],
-    //     },
-    //   ],
-    // });
 
-    // // Deploy Angular app to S3 and invalidate CloudFront cache
-    // new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-    //   sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
-    //   destinationBucket: movieBucket,
-    //   distribution,
-    //   distributionPaths: ['/*'],
-    // });
-
-    // new cdk.CfnOutput(this, 'DistributionDomainName', {
-    //   value: distribution.distributionDomainName,
-    // });
+  //   // CloudFront distribution for Angular app
+  //   const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
+  //     originConfigs: [
+  //       {
+  //         s3OriginSource: {
+  //           s3BucketSource: movieBucket,
+  //         },
+  //         behaviors: [{ isDefaultBehavior: true }],
+  //       },
+  //     ],
+  //   });
+  //
+  //   // Deploy Angular app to S3 and invalidate CloudFront cache
+  //   new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+  //     sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
+  //     destinationBucket: movieBucket,
+  //     distribution,
+  //     distributionPaths: ['/*'],
+  //   });
+  //
+  //   new cdk.CfnOutput(this, 'DistributionDomainName', {
+  //     value: distribution.distributionDomainName,
+  //   });
   }
 }
 

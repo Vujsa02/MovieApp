@@ -68,7 +68,7 @@ export class MovieService {
   }
 
   searchMovies(criteria: object): Observable<any>{
-    return this.http.get<any>(environment.apiGatewayHost + `search`);
+    return this.http.post<any>(environment.apiGatewayHost + `search`, criteria);
   }
   deleteMovie(movieId: string, createdAt: string): Observable<any> {
     return this.http.delete<any>(environment.apiGatewayHost + `movies/${movieId}?createdAt=${createdAt}`);

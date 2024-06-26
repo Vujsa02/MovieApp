@@ -2,42 +2,72 @@ import boto3
 import json
 import os
 
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['MOVIE_TABLE_NAME'])
+def query_dynamodb(title=None, director=None, genre=None, actors=None, description=None):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(os.environ['MOVIE_TABLE_NAME'])
 
-def create_composite_key(title, director, actors, description, genre):
-    # Create a composite key based on provided attributes
-    default_title = title or '*'
-    default_director = director or '*'
-    default_actors = actors or '*'
-    default_description = description or '*'
-    default_genre = genre or '*'
-    return f"{default_title}#{default_director}#{default_actors}#{default_description}#{default_genre}"
+    # Initialize base parameters
+    params = {
+        'TableName': os.environ['MOVIE_TABLE_NAME'],
+    }
+
+    # Build KeyConditionExpression and ExpressionAttributeValues dynamically
+    key_condition_expression = ''
+    filter_expressions = []
+    expression_attribute_values = {}
+
+    if title:
+        params['IndexName'] = 'TitleIndex'
+        key_condition_expression = 'title = :title'
+        expression_attribute_values[':title'] = title
+
+    if director:
+        if key_condition_expression:
+            filter_expressions.append('director = :director')
+        else:
+            params['IndexName'] = 'DirectorIndex'
+            key_condition_expression = 'director = :director'
+        expression_attribute_values[':director'] = director
+
+    if description:
+        if key_condition_expression:
+            filter_expressions.append('contains(description, :description)')
+        else:
+            params['IndexName'] = 'DescriptionIndex'
+            key_condition_expression = 'description = :description'
+        expression_attribute_values[':description'] = description
+
+    if not key_condition_expression and not filter_expressions:
+        raise ValueError("At least one search criteria must be provided.")
+
+    if key_condition_expression:
+        params['KeyConditionExpression'] = key_condition_expression
+        params['ExpressionAttributeValues'] = expression_attribute_values
+
+    if filter_expressions:
+        params['FilterExpression'] = ' AND '.join(filter_expressions)
+
+    # Perform DynamoDB query
+    response = table.query(**params)
+    items = response['Items']
+    if genre:
+        items = [item for item in items if genre in item['genres']]
+    if actors:
+        items = [item for item in items if actors in item['actors']]
+    return items
 
 def lambda_handler(event, context):
     try:
-        # Parse query parameters from event
-        title = event['queryStringParameters'].get('title')
-        director = event['queryStringParameters'].get('director')
-        actors = event['queryStringParameters'].get('actors')
-        description = event['queryStringParameters'].get('description')
-        genre = event['queryStringParameters'].get('genre')
-
-        # Create composite key
-        composite_key = create_composite_key(title, director, actors, description, genre)
+        # Parse parameters from request body
+        body = json.loads(event['body'])
+        title = body.get('title')
+        director = body.get('director')
+        genre = body.get('genre')
+        actors = body.get('actors')
+        description = body.get('description')
 
         # Query DynamoDB using the global secondary index
-        params = {
-            'TableName': os.environ['MOVIE_TABLE_NAME'],
-            'IndexName': os.environ['MOVIE_TABLE_GSI_NAME'],
-            'KeyConditionExpression': 'compositeKey = :key',
-            'ExpressionAttributeValues': {
-                ':key': composite_key,
-            },
-        }
-
-        # Perform DynamoDB query
-        response = table.query(**params)
+        items = query_dynamodb(title=title, director=director, genre=genre, actors=actors, description=description)
 
         return {
             'statusCode': 200,
@@ -46,7 +76,7 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
             },
-            'body': json.dumps(response['Items']),
+            'body': json.dumps(items),
         }
     except Exception as e:
         print(f"Error querying DynamoDB: {e}")
