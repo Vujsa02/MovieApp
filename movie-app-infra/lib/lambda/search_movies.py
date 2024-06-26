@@ -16,12 +16,13 @@ def create_composite_key(title, director, actors, description, genre):
 
 def lambda_handler(event, context):
     try:
-        # Parse query parameters from event
-        title = event['queryStringParameters'].get('title')
-        director = event['queryStringParameters'].get('director')
-        actors = event['queryStringParameters'].get('actors')
-        description = event['queryStringParameters'].get('description')
-        genre = event['queryStringParameters'].get('genre')
+        # Parse parameters from request body
+        body = json.loads(event['body'])
+        title = body.get('title')
+        director = body.get('director')
+        actors = body.get('actors')
+        description = body.get('description')
+        genre = body.get('genre')
 
         # Create composite key
         composite_key = create_composite_key(title, director, actors, description, genre)

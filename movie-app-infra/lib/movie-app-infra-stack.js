@@ -8,6 +8,7 @@ const sns = require('aws-cdk-lib/aws-sns');
 const subscriptions = require('aws-cdk-lib/aws-sns-subscriptions');
 const cloudfront = require('aws-cdk-lib/aws-cloudfront');
 const s3deploy = require('aws-cdk-lib/aws-s3-deployment');
+const iam = require('aws-cdk-lib/aws-iam');
 const path = require('path');
 
 class MovieAppInfraStack extends cdk.Stack {
@@ -41,14 +42,12 @@ class MovieAppInfraStack extends cdk.Stack {
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       tableName: "mmm-movie-table",
-      globalSecondaryIndexes: [
-        {
-          indexName: 'FlexibleSearchIndex',
-          partitionKey: { name: 'compositeKey', type: dynamodb.AttributeType.STRING },
-          projectionType: dynamodb.ProjectionType.ALL, // Adjust projection type as needed
-        }
-      ],
+    });
 
+    movieTable.addGlobalSecondaryIndex({
+      indexName: 'FlexibleSearchIndex',
+      partitionKey: { name: 'compositeKey', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL, // Adjust projection type as needed
     });
 
     // User pool
@@ -217,6 +216,17 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieTable.grantReadData(queryMoviesLambda);
 
+    const queryMoviesPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['dynamodb:Query'],
+      resources: [
+        movieTable.tableArn,
+        `${movieTable.tableArn}/index/FlexibleSearchIndex`, // Include the index ARN
+      ],
+    });
+
+    queryMoviesLambda.addToRolePolicy(queryMoviesPolicy);
+
     const subscribeLambda = new lambda.Function(this, 'SubscribeFunction', {
         runtime: lambda.Runtime.PYTHON_3_9,
         code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
@@ -251,7 +261,7 @@ class MovieAppInfraStack extends cdk.Stack {
     streamMovieResource.addMethod('GET', new apigateway.LambdaIntegration(viewContentLambda));
 
     const searchMoviesResource = api.root.addResource('search');
-    searchMoviesResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesLambda));
+    searchMoviesResource.addMethod('POST', new apigateway.LambdaIntegration(queryMoviesLambda));
 
     const subscribeResource = api.root.addResource('subscribe');
     subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
