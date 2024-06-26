@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px;
 }
 
 .lists {
@@ -37,11 +37,15 @@ mat-selection-list {
   border: 1px solid #ccc;
   border-radius: 4px;
   width: 40vh;
-  min-height: 45vh;
-  max-height: 45vh;
+  min-height: 40vh;
+  max-height: 40vh;
   overflow-y: auto;
 }
 
 button {
   margin-top: 20px;
+  color: #fff;
+  background-color: #3f51b5;
+  padding: 2px;
+  border-radius: 4px;
 }
