@@ -45,8 +45,8 @@ def query_dynamodb(title=None, director=None, genre=None, actors=None, descripti
                 return items
         elif actors:
             items = query_movies_by_actor(actors)
-            if actors:
-                items = [item for item in items if genre in item['genres']]
+            if genre:
+                items = [item for item in items if genre in item['genre']]
                 return items
         raise ValueError("At least one search criteria must be provided.")
 
@@ -90,6 +90,7 @@ def query_movies_by_actor(actor):
             ':actor': actor,
         }
     )
+    print(response['Items'])
     movie_id_timestamps = [(item['movieId'], item['createdAt']) for item in response['Items']]
     return get_movies_by_ids(movie_id_timestamps)
 
@@ -104,6 +105,7 @@ def get_movies_by_ids(movie_id_timestamps):
         response = table.get_item(Key={'movieId': movie_id, 'createdAt': created_at})
         if 'Item' in response:
             items.append(response['Item'])
+    print(items)
     return items
 
 def lambda_handler(event, context):

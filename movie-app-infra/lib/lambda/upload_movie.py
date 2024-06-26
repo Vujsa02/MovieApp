@@ -80,7 +80,7 @@ def lambda_handler(event, context):
         subscriptions = response['Items']
 
         # add actors, director, and genre to the match list
-        match_list = actors + [director] + [genre]
+        match_list = actors + [director] + genre
         for subscription in subscriptions:
             # Check if any of the subscriptions match the movie metadata
             if any(sub in match_list for sub in subscription['subscriptions']):
