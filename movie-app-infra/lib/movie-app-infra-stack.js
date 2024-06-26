@@ -13,6 +13,8 @@ const path = require('path');
 const sqs = require('aws-cdk-lib/aws-sqs');
 const {PolicyStatement} = require("aws-cdk-lib/aws-iam");
 const eventSources = require('aws-cdk-lib/aws-lambda-event-sources');
+const sources = require('aws-cdk-lib/aws-lambda-event-sources');
+const destinations = require('aws-cdk-lib/aws-lambda-destinations');
 
 class MovieAppInfraStack extends cdk.Stack {
   constructor(scope, id, props) {
@@ -92,6 +94,7 @@ class MovieAppInfraStack extends cdk.Stack {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       tableName: "mmm-user-interactions-table",
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
     });
 
 
@@ -345,6 +348,41 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieBucket.grantDelete(deleteMovieLambda);
     movieTable.grantReadWriteData(deleteMovieLambda);
+
+    const updateFeedLambda = new lambda.Function(this, 'UpdateFeedLambda', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      handler: 'feed_update.lambda_handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      environment: {
+        USER_FEED_TABLE_NAME: userFeedTable.tableName,
+        USER_INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
+        MOVIE_TABLE_NAME: movieTable.tableName,
+      }
+    });
+
+    // Grant necessary permissions to the Lambda function
+    userFeedTable.grantReadWriteData(updateFeedLambda);
+    userInteractionsTable.grantStreamRead(updateFeedLambda);
+    userInteractionsTable.grantReadWriteData(updateFeedLambda);
+    movieTable.grantReadData(updateFeedLambda);
+
+    updateFeedLambda.addToRolePolicy(new PolicyStatement({
+      actions: ['dynamodb:GetItem'],
+      resources: [userInteractionsTable.tableArn],
+    }));
+
+    const deadLetterQueue = new sqs.Queue(this, 'DeadLetterQueue');
+
+    // Create event source mapping to trigger the Lambda function on DynamoDB stream events
+    updateFeedLambda.addEventSource(new sources.DynamoEventSource(userInteractionsTable, {
+      startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+      batchSize: 5,
+      bisectBatchOnFunctionError: true,
+      onFailure: new destinations.SqsDestination(deadLetterQueue),
+      retryAttempts: 10,
+    }));
+
+
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {

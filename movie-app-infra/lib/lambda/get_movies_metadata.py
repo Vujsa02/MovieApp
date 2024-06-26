@@ -6,10 +6,20 @@ from boto3.dynamodb.conditions import Key
 dynamodb = boto3.resource('dynamodb')
 movie_table = dynamodb.Table(os.environ['MOVIE_TABLE_NAME'])
 
+
+def scan_table(table_name):
+    response = table_name.scan()
+    items = response.get('Items', [])
+    while 'LastEvaluatedKey' in response:
+        response = table_name.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        items.extend(response['Items'])
+    return items
+
+
 def lambda_handler(event, context):
     try:
-        response = movie_table.scan()
-        movies = response.get('Items', [])
+
+        movies = scan_table(movie_table)
 
         return {
             'statusCode': 200,

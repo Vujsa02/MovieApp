@@ -2,27 +2,69 @@ import json
 import os
 
 import boto3
+from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
+user_interactions_table = dynamodb.Table(os.environ['USER_INTERACTIONS_TABLE_NAME'])
 user_feed_table = dynamodb.Table(os.environ['USER_FEED_TABLE_NAME'])
+movie_table = dynamodb.Table(os.environ['MOVIE_TABLE_NAME'])
 
 
 def lambda_handler(event, context):
+    # Process each record in the DynamoDB event
     for record in event['Records']:
+        print('Record:', record)
         if record['eventName'] == 'INSERT' or record['eventName'] == 'MODIFY':
-            new_image = record['dynamodb']['NewImage']
-            user_id = new_image['userId']['S']
-            # Extract the attributes you need
-            attributes = {k: int(v['N']) for k, v in new_image.items() if k not in ['userId']}
+            user_id = record['dynamodb']['Keys']['userId']['S']
+            update_user_feed(user_id)
 
-            # Update the userFeedTable
-            user_feed_table.update_item(
-                Key={'userId': user_id},
-                UpdateExpression='SET ' + ', '.join(f'#{k} = :{k}' for k in attributes.keys()),
-                ExpressionAttributeNames={f'#{k}': k for k in attributes.keys()},
-                ExpressionAttributeValues={f':{k}': v for k, v in attributes.items()}
-            )
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Successfully processed records')
-    }
+
+def scan_table(table_name):
+    response = table_name.scan()
+    items = response.get('Items', [])
+    while 'LastEvaluatedKey' in response:
+        response = table_name.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        items.extend(response['Items'])
+    return {'Items': items}
+
+
+def update_user_feed(user_id):
+    # Get user interactions
+    print('Updating feed for user:', user_id)
+    response = user_interactions_table.get_item(Key={'userId': user_id})
+    if 'Item' not in response:
+        return
+
+    interactions = response['Item']
+    # Remove non-relevant fields
+    interactions.pop('userId', None)
+
+    # Get all movies
+    movies = scan_table(movie_table)
+    if 'Items' not in movies:
+        return
+
+    # Initialize the feed for the user
+    feed = {}
+    for movie in movies['Items']:
+        movie_id = movie['movieId']
+        feed[movie_id] = calculate_movie_score(movie, interactions)
+
+    # Update user feed table
+    user_feed_table.put_item(
+        Item={
+            'userId': user_id,
+            **feed
+        }
+    )
+
+
+def calculate_movie_score(movie, interactions):
+    score = 0
+    attributes = movie.get('genre', []) + movie.get('actors', []) + [movie.get('director')]
+    print('Attributes:', attributes)
+    print('Interactions:', interactions)
+    for attr in attributes:
+        if attr in interactions:
+            score += interactions[attr]
+    return score
