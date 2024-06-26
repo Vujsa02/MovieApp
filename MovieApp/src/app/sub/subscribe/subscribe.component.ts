@@ -82,7 +82,7 @@ export class SubscribeComponent implements OnInit{
 
   subscribe() {
     const subscriptions: string[] = this.selectedActors.concat(this.selectedDirectors, this.selectedGenres);
-    this.subscriptionService.subscribe(this.cognitoService.getCurrentUserEmail(), subscriptions).subscribe(() => {
+    this.subscriptionService.subscribe(this.cognitoService.getCurrentUserEmail(), subscriptions, this.cognitoService.getCurrentUsername()).subscribe(() => {
       this.toastr.success('Successfully subscribed!');
     }, (error) => {
       console.error(error);
