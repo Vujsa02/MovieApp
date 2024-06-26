@@ -11,14 +11,16 @@ export class SubscriptionService {
 
   constructor(private http: HttpClient) { }
 
-  subscribe(email: string, subscriptions: string[]): Observable<any> {
+  subscribe(email: string, subscriptions: string[], username: string): Observable<any> {
     const payload = {
       email: email,
-      subscriptions: subscriptions
+      subscriptions: subscriptions,
+      username:username
     };
 
     const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
     });
 
     return this.http.put<any>(`${environment.apiGatewayHost}subscribe`, payload, { headers: headers })
