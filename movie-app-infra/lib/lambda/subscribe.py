@@ -29,6 +29,8 @@ def lambda_handler(event, context):
         'email': email,
         'subscriptions': subscriptions
     }
+    ses = boto3.client('ses')
+
 
     try:
         # Save subscription to DynamoDB
@@ -37,6 +39,12 @@ def lambda_handler(event, context):
             Item=db_params
         )
         print('Subscription saved to DynamoDB')
+
+        print('Verifying email identity:', email)
+        res = ses.verify_email_identity(
+            EmailAddress=email
+        )
+        print('Email identity verified:', res)
 
         return {
             'statusCode': 200,

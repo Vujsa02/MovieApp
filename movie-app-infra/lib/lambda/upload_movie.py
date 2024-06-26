@@ -8,11 +8,17 @@ s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 movie_bucket = os.environ['MOVIE_BUCKET_NAME']
 movie_table = os.environ['MOVIE_TABLE_NAME']
+subscription_table = os.environ['SUBSCRIPTION_TABLE_NAME']
 table = dynamodb.Table(movie_table)
+subscription_table = dynamodb.Table(subscription_table)
+sqs = boto3.client('sqs')
+email_queue_url = os.environ['EMAIL_QUEUE_URL']
+
 
 def create_composite_key(title, director, actors, description, genre):
     # Create a composite key based on provided attributes
     return f"{title}#{director}#{actors}#{description}#{genre}"
+
 
 def lambda_handler(event, context):
     try:
@@ -62,6 +68,31 @@ def lambda_handler(event, context):
 
         # Save movie metadata to DynamoDB
         table.put_item(Item=db_params)
+
+        # Get all subscriptions from the subscription table
+        response = subscription_table.scan()
+        subscriptions = response['Items']
+
+        # add actors, director, and genre to the match list
+        match_list = actors + [director] + [genre]
+        for subscription in subscriptions:
+            # Check if any of the subscriptions match the movie metadata
+            if any(sub in match_list for sub in subscription['subscriptions']):
+                # Send an email to the user
+                print(image)
+                message = {
+                    'email': subscription['email'],
+                    'subject': f"New Movie: {title}",
+                    'body_text': f"Check out the new movie: {title}. \n\n Short Description: {description}",
+                    'body_html': f"""
+                        <p>Check out the new movie: <strong>{title}</strong>.</p>
+                        <p>Short Description: {description}</p>
+                    """
+                }
+                sqs.send_message(
+                    QueueUrl=email_queue_url,
+                    MessageBody=json.dumps(message)
+                )
 
         return {
             'statusCode': 200,
