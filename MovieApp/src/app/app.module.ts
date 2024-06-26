@@ -16,13 +16,17 @@ import {ToastrModule} from "ngx-toastr";
 import {SubscribeComponent} from "./sub/subscribe/subscribe.component";
 import {MatListOption, MatSelectionList} from "@angular/material/list";
 import {MaterialModule} from "./infrastructure/material/material.module";
+import {MatDialogModule} from "@angular/material/dialog";
+import {ConfirmDeleteDialogComponent} from "./dialogs/confirm-delete-dialog/confirm-delete-dialog.component";
 
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
-    SubscribeComponent
+    SubscribeComponent,
+    ConfirmDeleteDialogComponent
+
   ],
   imports: [
     BrowserModule,
@@ -33,6 +37,8 @@ import {MaterialModule} from "./infrastructure/material/material.module";
     AppRoutingModule,
     HttpClientModule,
     MovieModule,
+    MatDialogModule,
+    MatButtonModule,
     ToastrModule.forRoot({
       timeOut: 3000, // Set the duration for toastr messages (milliseconds)
       positionClass: 'toast-top-right', // Set the position of toastr messages

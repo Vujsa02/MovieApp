@@ -5,7 +5,9 @@ import {MovieService} from "../movie.service";
 import {CommonModule, NgIf, NgOptimizedImage} from "@angular/common";
 import {env} from "process";
 import {environment} from "../../../environment";
-
+import { ToastrService } from 'ngx-toastr';
+import {MatDialog} from "@angular/material/dialog";
+import {ConfirmDeleteDialogComponent} from "../../dialogs/confirm-delete-dialog/confirm-delete-dialog.component";
 @Component({
   selector: 'app-movie-details',
   standalone: true,
@@ -23,7 +25,9 @@ export class MovieDetailsComponent {
   constructor(private movieService: MovieService,
               private router: Router,
               private route: ActivatedRoute,
-              private cdr: ChangeDetectorRef) {}
+              private cdr: ChangeDetectorRef,
+              private toastr: ToastrService,
+              public dialog: MatDialog) {}
 
   ngOnInit() {
     this.route.params.subscribe((params) => {
@@ -69,4 +73,41 @@ export class MovieDetailsComponent {
       });
     }
   }
+
+    downloadMovie() {
+    // Implement your download logic here
+    this.movieService.getPresignedUrl(this.movie!.movieId).subscribe(response => {
+      const presignedUrl = response.presigned_url;
+      window.open(presignedUrl, '_blank');
+    }, error => {
+      console.error('Error getting presigned URL', error);
+      alert('Failed to get presigned URL');
+    });
+  }
+
+  updateMovie(){}
+  deleteMovie() {
+    const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
+      data: { movie: this.movie },
+    });
+
+    // Handle dialog close
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.movieService.deleteMovie(this.movie!.movieId, this.movie!.createdAt).subscribe(
+          response => {
+            this.toastr.success('Successfully deleted movie', 'Success', {
+              timeOut: 5000
+            });
+            this.router.navigate(['/home']);
+          },
+          error => {
+            this.toastr.error('Error deleting movie', 'Error');
+            console.log(error);
+          }
+        );
+      }
+    });
+  }
+
 }

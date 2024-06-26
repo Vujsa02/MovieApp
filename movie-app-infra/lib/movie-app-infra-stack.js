@@ -65,20 +65,19 @@ class MovieAppInfraStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-
-    // User pool
-
+    // DynamoDB table for reviews
     const reviewTable = new dynamodb.Table(this, 'ReviewTable', {
       partitionKey: { name: 'reviewId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      tableName: "mmm-review-table"
+      tableName: "mmm-review-table",
     });
 
+    // DynamoDB table for subscriptions
     const subscriptionTable = new dynamodb.Table(this, 'SubscriptionTable', {
-        partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        tableName: "mmm-subscription-table"
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      tableName: "mmm-subscription-table",
     });
 
 
@@ -126,8 +125,8 @@ class MovieAppInfraStack extends cdk.Stack {
         birthdate: {
           mutable: true,
           required: true,
-        }
-      }
+        },
+      },
     });
 
     // App Client
@@ -298,6 +297,20 @@ class MovieAppInfraStack extends cdk.Stack {
     });
     sendEmailLambda.addEventSource(eventSource);
 
+    // Delete movie Lambda function
+    const deleteMovieLambda = new lambda.Function(this, 'DeleteMovieFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'delete_movie.lambda_handler',
+      environment: {
+        MOVIE_BUCKET_NAME: movieBucket.bucketName,
+        MOVIE_TABLE_NAME: movieTable.tableName,
+      },
+    });
+
+    movieBucket.grantDelete(deleteMovieLambda);
+    movieTable.grantReadWriteData(deleteMovieLambda);
+
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
       restApiName: 'Movie Service',
@@ -316,6 +329,8 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const movieByIdResource = moviesResource.addResource('{movieId}');
     movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMovieMetadataByIdLambda));
+    movieByIdResource.addMethod('DELETE', new apigateway.LambdaIntegration(deleteMovieLambda));
+
 
     const streamMovieResource = moviesResource.addResource('stream').addResource('{movieId}');
     streamMovieResource.addMethod('GET', new apigateway.LambdaIntegration(viewContentLambda));
@@ -325,7 +340,6 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const subscribeResource = api.root.addResource('subscribe');
     subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
-
 
 
 

@@ -15,7 +15,7 @@ body {
   background-color: #fff;
   padding: 20px;
   border-radius: 8px;
-
+  position: relative;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   margin-left: auto; /* Push the container to the right */
 }
@@ -37,16 +37,16 @@ body {
 }
 .movie-image {
     width: 250px;
-    height: auto;
+    height: 270px;
     border-radius: 8px;
     display: block; /* Ensure the image is block-level */
     margin: 0 auto 20px; /* Center align the image */
 }
 
 .video-container{
-  margin-right: auto;
+  margin-right: 50px;
   margin-left:20px;
-  width: 70%;
+  width:90%;
   height: 600px;
   background-color: #fff;
   padding: 20px;
@@ -54,3 +54,70 @@ body {
 
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+.download-button {
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:200px;
+  margin-top: 20px;
+  margin-left:20px;
+  font-weight: bold;
+}
+
+.download-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+.update-button {
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:120px;
+  font-weight: bold;
+}
+
+.update-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+.delete-button {
+  background-color: #bc544b; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:120px;
+  font-weight: bold;
+}
+
+.delete-button:hover {
+  background-color: #ce645a; /* Darker blue on hover */
+}
+
+
+
+.button-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  margin-bottom: 20px; /* Adjust for any bottom margin */
+}
+
+.button-container button {
+  margin: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
