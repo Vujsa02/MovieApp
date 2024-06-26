@@ -10,6 +10,9 @@ const cloudfront = require('aws-cdk-lib/aws-cloudfront');
 const s3deploy = require('aws-cdk-lib/aws-s3-deployment');
 const iam = require('aws-cdk-lib/aws-iam');
 const path = require('path');
+const sqs = require('aws-cdk-lib/aws-sqs');
+const {PolicyStatement} = require("aws-cdk-lib/aws-iam");
+const eventSources = require('aws-cdk-lib/aws-lambda-event-sources');
 
 class MovieAppInfraStack extends cdk.Stack {
   constructor(scope, id, props) {
@@ -65,6 +68,17 @@ class MovieAppInfraStack extends cdk.Stack {
         tableName: "mmm-subscription-table"
     });
 
+
+    // SQS Queue for Email Notifications
+    const emailQueue = new sqs.Queue(this, 'EmailQueue', {
+      queueName: 'mmm-email-queue',
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Output SQS Queue URL
+    new cdk.CfnOutput(this, 'EmailQueueUrl', {
+      value: emailQueue.queueUrl,
+    });
 
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'UserPool', {
@@ -139,6 +153,8 @@ class MovieAppInfraStack extends cdk.Stack {
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
         MOVIE_TABLE_NAME: movieTable.tableName,
+        SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+        EMAIL_QUEUE_URL: emailQueue.queueUrl,
       },
     });
 
@@ -235,8 +251,36 @@ class MovieAppInfraStack extends cdk.Stack {
             SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
         },
     });
+    subscribeLambda.addToRolePolicy(new PolicyStatement({
+      actions:['ses:VerifyEmailIdentity'],
+      resources: ['*'],
+    }));
 
     subscriptionTable.grantWriteData(subscribeLambda);
+    subscriptionTable.grantReadData(uploadMovieLambda);
+    emailQueue.grantSendMessages(uploadMovieLambda);
+
+    // Lambda Function for Sending Emails
+    const sendEmailLambda = new lambda.Function(this, 'SendEmailFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      handler: 'send_message.lambda_handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      environment: {
+        EMAIL_QUEUE_URL: emailQueue.queueUrl,
+        SENDER_EMAIL: 'bakibookingteam17@gmail.com',
+      },
+    });
+
+    sendEmailLambda.addToRolePolicy(new PolicyStatement({
+      actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+      resources: ['*'],
+    }));
+
+    // Event Source Mapping for SQS
+    const eventSource = new eventSources.SqsEventSource(emailQueue, {
+      batchSize: 10,
+    });
+    sendEmailLambda.addEventSource(eventSource);
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
@@ -265,6 +309,7 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const subscribeResource = api.root.addResource('subscribe');
     subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
+
 
 
 
