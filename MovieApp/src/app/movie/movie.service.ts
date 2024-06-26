@@ -68,6 +68,6 @@ export class MovieService {
   }
 
   searchMovies(criteria: object): Observable<any>{
-    return this.http.get<any>(environment.apiGatewayHost + `search`);
+    return this.http.post<any>(environment.apiGatewayHost + `search`, criteria);
   }
 }

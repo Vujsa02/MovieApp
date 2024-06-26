@@ -15,7 +15,7 @@ export class MovieListComponent implements OnInit {
   searchCriteria = {
     title: '',
     description: '',
-    actor: '',
+    actors: '',
     director: '',
     genre: ''
   };

@@ -8,6 +8,7 @@ const sns = require('aws-cdk-lib/aws-sns');
 const subscriptions = require('aws-cdk-lib/aws-sns-subscriptions');
 const cloudfront = require('aws-cdk-lib/aws-cloudfront');
 const s3deploy = require('aws-cdk-lib/aws-s3-deployment');
+const iam = require('aws-cdk-lib/aws-iam');
 const path = require('path');
 const sqs = require('aws-cdk-lib/aws-sqs');
 const {PolicyStatement} = require("aws-cdk-lib/aws-iam");
@@ -44,15 +45,26 @@ class MovieAppInfraStack extends cdk.Stack {
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       tableName: "mmm-movie-table",
-      globalSecondaryIndexes: [
-        {
-          indexName: 'FlexibleSearchIndex',
-          partitionKey: { name: 'compositeKey', type: dynamodb.AttributeType.STRING },
-          projectionType: dynamodb.ProjectionType.ALL, // Adjust projection type as needed
-        }
-      ],
-
     });
+
+    movieTable.addGlobalSecondaryIndex({
+      indexName: 'TitleIndex',
+      partitionKey: { name: 'title', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    movieTable.addGlobalSecondaryIndex({
+          indexName: 'DirectorIndex',
+          partitionKey: { name: 'director', type: dynamodb.AttributeType.STRING },
+          projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+    movieTable.addGlobalSecondaryIndex({
+      indexName: 'DescriptionIndex',
+      partitionKey: { name: 'description', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
 
     // User pool
 
@@ -224,14 +236,28 @@ class MovieAppInfraStack extends cdk.Stack {
     const queryMoviesLambda = new lambda.Function(this, 'QueryMoviesFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-      handler: 'search_movies.lambda_handler', // Adjust the handler path and function name as per your structure
+      handler: 'search_movies.lambda_handler',
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
-        MOVIE_TABLE_GSI_NAME: 'FlexibleSearchIndex', // Assuming accessing the first GSI
       },
     });
 
     movieTable.grantReadData(queryMoviesLambda);
+
+    const queryMoviesPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['dynamodb:Query'],
+      resources: [
+        movieTable.tableArn,
+        `${movieTable.tableArn}/index/TitleIndex`,
+        `${movieTable.tableArn}/index/DirectorIndex`,
+        `${movieTable.tableArn}/index/GenreIndex`,
+        `${movieTable.tableArn}/index/ActorsIndex`,
+        `${movieTable.tableArn}/index/DescriptionIndex`,
+      ],
+    });
+
+    queryMoviesLambda.addToRolePolicy(queryMoviesPolicy);
 
     const subscribeLambda = new lambda.Function(this, 'SubscribeFunction', {
         runtime: lambda.Runtime.PYTHON_3_9,
@@ -295,7 +321,7 @@ class MovieAppInfraStack extends cdk.Stack {
     streamMovieResource.addMethod('GET', new apigateway.LambdaIntegration(viewContentLambda));
 
     const searchMoviesResource = api.root.addResource('search');
-    searchMoviesResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesLambda));
+    searchMoviesResource.addMethod('POST', new apigateway.LambdaIntegration(queryMoviesLambda));
 
     const subscribeResource = api.root.addResource('subscribe');
     subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
