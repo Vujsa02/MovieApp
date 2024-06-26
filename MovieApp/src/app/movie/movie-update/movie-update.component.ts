@@ -240,16 +240,14 @@ export class MovieUpdateComponent implements OnInit {
 
    setGenreSelections() {
     const genreCheckboxes = document.querySelectorAll('input[type="checkbox"][name="genre"]');
-    this.movie.genre = [];
     genreCheckboxes.forEach(checkbox => {
-      if ((checkbox as HTMLInputElement).checked) {
-        const genre = (checkbox as HTMLInputElement).value;
-        const genreValue = Object.values(Genre).find(g => g === genre);
-        if(genreValue! in this.movie.genre){
-          (checkbox as HTMLInputElement).checked = true;
-          this.selectedGenres.push(genreValue!);
+      const genre = (checkbox as HTMLInputElement).value;
+      const genreValue = Object.values(Genre).find(g => g === genre);
+      if(this.movie.genre.includes(genreValue!)){
+        (checkbox as HTMLInputElement).checked = true;
+        this.selectedGenres.push(genreValue!);
         }
-      }
+
     });
   }
 
