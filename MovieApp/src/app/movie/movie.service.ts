@@ -1,16 +1,17 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable, of} from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import {Movie} from "./movie-metadata.model";
 import Decimal from 'decimal.js';
 import {environment} from "../../environment";
+import {AwsCognitoService} from "../auth/aws-cognito.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class MovieService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cognitoService: AwsCognitoService) {}
 
   // Method to get presigned URL and upload a movie
   uploadMovie(movie: Movie, fileContent: string): Observable<any> {
@@ -105,8 +106,12 @@ export class MovieService {
   }
 
   // Method to get presigned URL and download a movie
-  getPresignedUrl(movieId: string): Observable<any> {
-    return this.http.get<any>(environment.apiGatewayHost + `movies/download/${movieId}`);
+  getPresignedUrl(movieId: string, movieInfo: string[]): Observable<any> {
+    let params = new HttpParams();
+    params = params.append('info', JSON.stringify(movieInfo));
+    params = params.append('username', this.cognitoService.getCurrentUsername());
+
+    return this.http.get<any>(environment.apiGatewayHost + `movies/download/${movieId}`, { params });
   }
 
   // Method to get movie metadata

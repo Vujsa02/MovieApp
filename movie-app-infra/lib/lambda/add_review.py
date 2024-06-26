@@ -7,12 +7,16 @@ from datetime import datetime
 dynamodb = boto3.resource('dynamodb')
 review_table = os.environ['REVIEW_TABLE_NAME']
 table = dynamodb.Table(review_table)
+interactions_table = dynamodb.Table(os.environ['INTERACTIONS_TABLE_NAME'])
+
 
 def lambda_handler(event, context):
     body = json.loads(event['body'])
     movie_id = body['movieId']
     user_id = body['userId']
     rating = body['rating']  # Expecting "like", "love", or "dislike"
+    # TODO: return all info about the movie
+    info = body['info']
 
     # Validate the rating
     if rating not in ['like', 'love', 'dislike']:
@@ -44,6 +48,31 @@ def lambda_handler(event, context):
         print('Saving review to DynamoDB:', db_params)
         table.put_item(Item=db_params)
         print('Review saved to DynamoDB')
+
+        # Update interactions table, love +2, like +1, dislike -3, if item from info list is not in interactions table, add it with value 1
+        response = interactions_table.get_item(Key={'userId': user_id})
+        if 'Item' in response:
+            interactions = response['Item']
+            for key in info:
+                if key in interactions:
+                    if rating == 'love':
+                        interactions[key] += 2
+                    elif rating == 'like':
+                        interactions[key] += 1
+                    elif rating == 'dislike':
+                        interactions[key] -= 3
+                else:
+                    if rating == 'love':
+                        interactions[key] = 2
+                    elif rating == 'like':
+                        interactions[key] = 1
+                    elif rating == 'dislike':
+                        interactions[key] = -3
+            interactions_table.put_item(Item=interactions)
+        else:
+            interactions = {key: 1 for key in info}
+            interactions['userId'] = user_id
+            interactions_table.put_item(Item=interactions)
 
         return {
             'statusCode': 200,

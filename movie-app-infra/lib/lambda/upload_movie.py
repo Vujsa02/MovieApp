@@ -8,17 +8,13 @@ s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 movie_bucket = os.environ['MOVIE_BUCKET_NAME']
 movie_table = os.environ['MOVIE_TABLE_NAME']
+genres_table = dynamodb.Table(os.environ['GENRES_TABLE_NAME'])
+actors_table = dynamodb.Table(os.environ['ACTORS_TABLE_NAME'])
 subscription_table = os.environ['SUBSCRIPTION_TABLE_NAME']
 table = dynamodb.Table(movie_table)
 subscription_table = dynamodb.Table(subscription_table)
 sqs = boto3.client('sqs')
 email_queue_url = os.environ['EMAIL_QUEUE_URL']
-
-
-def create_composite_key(title, director, actors, description, genre):
-    # Create a composite key based on provided attributes
-    return f"{title}#{director}#{actors}#{description}#{genre}"
-
 
 def lambda_handler(event, context):
     try:
@@ -46,12 +42,8 @@ def lambda_handler(event, context):
             ExpiresIn=3600  # URL expiry time in seconds
         )
 
-        # Create composite key for DynamoDB
-        composite_key = create_composite_key(title, director, actors, description, genre)
-
         db_params = {
             'movieId': movie_id,
-            'compositeKey': composite_key,
             'title': title,
             'description': description,
             'fileName': file_name,
@@ -69,12 +61,26 @@ def lambda_handler(event, context):
         # Save movie metadata to DynamoDB
         table.put_item(Item=db_params)
 
+        for genr in genre:
+            genres_table.put_item(Item={
+                'movieId': movie_id,
+                'genre': genr,
+                'createdAt':created_at
+            })
+
+        for actor in actors:
+            actors_table.put_item(Item={
+                'movieId': movie_id,
+                'actor': actor,
+                'createdAt': created_at
+            })
+
         # Get all subscriptions from the subscription table
         response = subscription_table.scan()
         subscriptions = response['Items']
 
         # add actors, director, and genre to the match list
-        match_list = actors + [director] + [genre]
+        match_list = actors + [director] + genre
         for subscription in subscriptions:
             # Check if any of the subscriptions match the movie metadata
             if any(sub in match_list for sub in subscription['subscriptions']):

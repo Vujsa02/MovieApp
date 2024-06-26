@@ -76,8 +76,18 @@ export class MovieDetailsComponent {
   }
 
     downloadMovie() {
+    // add actors, director and genre to the movieInfo array
+    const movieInfo: string[] = [];
+    for (const actor of this.movie!.actors) {
+      movieInfo.push(actor);
+    }
+    movieInfo.push(this.movie!.director);
+    for (const genre of this.movie!.genre) {
+      movieInfo.push(genre);
+    }
+
     // Implement your download logic here
-    this.movieService.getPresignedUrl(this.movie!.movieId).subscribe(response => {
+    this.movieService.getPresignedUrl(this.movie!.movieId, movieInfo).subscribe(response => {
       const presignedUrl = response.presigned_url;
       window.open(presignedUrl, '_blank');
     }, error => {

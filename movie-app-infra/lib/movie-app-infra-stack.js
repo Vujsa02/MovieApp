@@ -209,6 +209,7 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'download_movie.lambda_handler',
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
+        INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
       },
     });
 
@@ -256,6 +257,7 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'add_review.lambda_handler',
       environment: {
         REVIEW_TABLE_NAME: reviewTable.tableName,
+        INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
       },
     });
 
@@ -305,8 +307,8 @@ class MovieAppInfraStack extends cdk.Stack {
     subscriptionTable.grantReadData(uploadMovieLambda);
     emailQueue.grantSendMessages(uploadMovieLambda);
     userInteractionsTable.grantReadWriteData(subscribeLambda);
-    userInteractionsTable.grantReadWriteData(updateMovieLambda);
     userInteractionsTable.grantReadWriteData(addReviewLambda);
+    userInteractionsTable.grantReadWriteData(downloadMovieLambda);
 
     // Lambda Function for Sending Emails
     const sendEmailLambda = new lambda.Function(this, 'SendEmailFunction', {
