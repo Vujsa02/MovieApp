@@ -9,6 +9,8 @@
           {{ actor }}
         </mat-list-option>
       </mat-selection-list>
+      <input type="text" placeholder="Add Actor" [(ngModel)]="newActor" />
+      <button (click)="addActor()">Add Actor</button>
     </div>
     <div class="list-container">
       <h2>Directors</h2>
@@ -18,6 +20,8 @@
           {{ director }}
         </mat-list-option>
       </mat-selection-list>
+      <input type="text" placeholder="Add Director" [(ngModel)]="newDirector" />
+      <button (click)="addDirector()">Add Director</button>
     </div>
     <div class="list-container">
       <h2>Genres</h2>
@@ -27,7 +31,9 @@
           {{ genre }}
         </mat-list-option>
       </mat-selection-list>
+      <input type="text" placeholder="Add Genre" [(ngModel)]="newGenre" />
+      <button (click)="addGenre()">Add Genre</button>
     </div>
   </div>
-  <button mat-raised-button color="primary" (click)="subscribe()">Subscribe</button>
+  <button style="background-color: #4cae4c" (click)="subscribe()">Subscribe</button>
 </div>
