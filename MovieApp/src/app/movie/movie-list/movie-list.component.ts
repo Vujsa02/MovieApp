@@ -46,4 +46,16 @@ export class MovieListComponent implements OnInit {
     this.movieService.searchMovies(this.searchCriteria).subscribe((filteredMovies) => {
       this.movies = filteredMovies;})
   }
+
+  resetMovies(){
+    this.fetchMovies()
+  }
+
+  clearForm() {
+    this.searchCriteria.title = '';
+    this.searchCriteria.description = '';
+    this.searchCriteria.actors = '';
+    this.searchCriteria.director = '';
+    this.searchCriteria.genre = '';
+  }
 }

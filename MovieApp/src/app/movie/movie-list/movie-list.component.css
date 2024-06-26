@@ -51,8 +51,36 @@ button {
   border-radius: 4px;
 }
 
+.nav-item1 {
+  background-color: #FFABAB;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 20px;
+  border-radius: 4px;
+}
+
+.nav-item2 {
+  background-color: #FF542F;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 20px;
+  border-radius: 4px;
+}
+
 .nav-item:hover {
   background-color: #536DFE; /* slightly brighter color on hover */
+}
+.nav-item1:hover {
+  background-color: #FFCBCB; /* slightly brighter color on hover */
+}
+.nav-item2:hover {
+  background-color: #FF7557; /* slightly brighter color on hover */
 }
 
 .movie-list{
