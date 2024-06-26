@@ -65,6 +65,26 @@ class MovieAppInfraStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    const genresTable = new dynamodb.Table(this, 'GenresTable', {
+    partitionKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
+    sortKey: { name: 'genre', type: dynamodb.AttributeType.STRING },
+    removalPolicy: cdk.RemovalPolicy.DESTROY,
+    tableName: 'mmm-genres-table',
+  });
+
+  const actorsTable = new dynamodb.Table(this, 'ActorsTable', {
+    partitionKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
+    sortKey: { name: 'actor', type: dynamodb.AttributeType.STRING },
+    removalPolicy: cdk.RemovalPolicy.DESTROY,
+    tableName: 'mmm-actors-table',
+  });
+
+  actorsTable.addGlobalSecondaryIndex({
+      indexName: 'actor-index',
+      partitionKey: { name: 'actor', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     // DynamoDB table for reviews
     const reviewTable = new dynamodb.Table(this, 'ReviewTable', {
       partitionKey: { name: 'reviewId', type: dynamodb.AttributeType.STRING },
@@ -179,6 +199,8 @@ class MovieAppInfraStack extends cdk.Stack {
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
         MOVIE_TABLE_NAME: movieTable.tableName,
+        GENRES_TABLE_NAME: genresTable.tableName,
+        ACTORS_TABLE_NAME: actorsTable.tableName,
         SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
         EMAIL_QUEUE_URL: emailQueue.queueUrl,
       },
@@ -186,6 +208,8 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieBucket.grantPut(uploadMovieLambda);
     movieTable.grantWriteData(uploadMovieLambda);
+    genresTable.grantWriteData(uploadMovieLambda);
+    actorsTable.grantWriteData(uploadMovieLambda);
 
     const updateMovieLambda = new lambda.Function(this, 'UpdateMovieFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -267,21 +291,26 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'search_movies.lambda_handler',
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
+        GENRES_TABLE_NAME: genresTable.tableName,
+        ACTORS_TABLE_NAME: actorsTable.tableName,
       },
     });
 
     movieTable.grantReadData(queryMoviesLambda);
+    genresTable.grantReadData(queryMoviesLambda);
+    actorsTable.grantReadData(queryMoviesLambda);
 
-    const queryMoviesPolicy = new iam.PolicyStatement({
+    const queryMoviesPolicy = new PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: ['dynamodb:Query'],
       resources: [
         movieTable.tableArn,
         `${movieTable.tableArn}/index/TitleIndex`,
         `${movieTable.tableArn}/index/DirectorIndex`,
-        `${movieTable.tableArn}/index/GenreIndex`,
-        `${movieTable.tableArn}/index/ActorsIndex`,
         `${movieTable.tableArn}/index/DescriptionIndex`,
+        genresTable.tableArn,
+        actorsTable.tableArn,
+        `${actorsTable.tableArn}/index/actor-index`, // Add actor-index here
       ],
     });
 
