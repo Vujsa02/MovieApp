@@ -140,12 +140,12 @@ export class MovieUpdateComponent implements OnInit {
               this.movie.image = imageContent; // Set the base64 string of the image to movie.image
               this.movieService.updateMovie(this.movie, movieContent)
                 .subscribe(() => {
-                  this.toastr.success('Movie uploaded successfully', 'Success', {
+                  this.toastr.success('Movie updated successfully', 'Success', {
                       timeOut: 5000
                     });
                 }, error => {
                   console.log(error);
-                  this.toastr.error('Error uploading', 'Error', {
+                  this.toastr.error('Error updating', 'Error', {
                      timeOut: 5000
                    });
                 });
@@ -154,12 +154,12 @@ export class MovieUpdateComponent implements OnInit {
         } else {
           this.movieService.updateMovie(this.movie, movieContent)
             .subscribe(() => {
-              this.toastr.success('Movie uploaded successfully', 'Success', {
+              this.toastr.success('Movie updated successfully', 'Success', {
                   timeOut: 5000
                 });
             }, error => {
               console.log(error);
-              this.toastr.error('Error uploading', 'Error', {
+              this.toastr.error('Error updating', 'Error', {
                    timeOut: 5000
                  });
 
@@ -178,12 +178,12 @@ export class MovieUpdateComponent implements OnInit {
               this.movie.image = imageContent;
               this.movieService.updateMovie(this.movie, '')
                 .subscribe(() => {
-                  this.toastr.success('Movie uploaded successfully', 'Success', {
+                  this.toastr.success('Movie updated successfully', 'Success', {
                       timeOut: 5000
                     });
                 }, error => {
                   console.log(error);
-                  this.toastr.error('Error uploading', 'Error', {
+                  this.toastr.error('Error updating', 'Error', {
                      timeOut: 5000
                    });
                 });
@@ -192,12 +192,12 @@ export class MovieUpdateComponent implements OnInit {
         } else {
           this.movieService.updateMovie(this.movie, '')
             .subscribe(() => {
-              this.toastr.success('Movie uploaded successfully', 'Success', {
+              this.toastr.success('Movie updated successfully', 'Success', {
                   timeOut: 5000
                 });
             }, error => {
               console.log(error);
-              this.toastr.error('Error uploading', 'Error', {
+              this.toastr.error('Error updating', 'Error', {
                    timeOut: 5000
                  });
 

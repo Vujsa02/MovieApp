@@ -26,7 +26,7 @@
 
 .dialog-actions {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-evenly;
 }
 
 .yes-dialog-button {
@@ -59,4 +59,8 @@
 
 .no-dialog-button:hover {
   background-color: #ce645a; /* Darker blue on hover */
+}
+
+.dialog-container{
+  width: 500px;
 }

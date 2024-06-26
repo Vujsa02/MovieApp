@@ -18,6 +18,7 @@ import {MatListOption, MatSelectionList} from "@angular/material/list";
 import {MaterialModule} from "./infrastructure/material/material.module";
 import {MatDialogModule} from "@angular/material/dialog";
 import {ConfirmDeleteDialogComponent} from "./dialogs/confirm-delete-dialog/confirm-delete-dialog.component";
+import {ReviewDialogComponent} from "./dialogs/review-dialog/review-dialog.component";
 
 
 @NgModule({
@@ -25,8 +26,8 @@ import {ConfirmDeleteDialogComponent} from "./dialogs/confirm-delete-dialog/conf
     AppComponent,
     HomeComponent,
     SubscribeComponent,
-    ConfirmDeleteDialogComponent
-
+    ConfirmDeleteDialogComponent,
+    ReviewDialogComponent,
   ],
   imports: [
     BrowserModule,

@@ -8,6 +8,7 @@ import {environment} from "../../../environment";
 import { ToastrService } from 'ngx-toastr';
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmDeleteDialogComponent} from "../../dialogs/confirm-delete-dialog/confirm-delete-dialog.component";
+import {ReviewDialogComponent} from "../../dialogs/review-dialog/review-dialog.component";
 @Component({
   selector: 'app-movie-details',
   standalone: true,
@@ -112,4 +113,21 @@ export class MovieDetailsComponent {
     });
   }
 
+  openReviewDialog(): void {
+    const dialogRef = this.dialog.open(ReviewDialogComponent, {
+
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === undefined) {
+      console.log('Dialog closed without action (cancel button)');
+      // Handle cancellation logic if needed
+    } else {
+      console.log('Dialog closed with result: ', result);
+      // Handle submission logic based on result (selectedOption)
+    }
+    });
+  }
+
+  protected readonly open = open;
 }
