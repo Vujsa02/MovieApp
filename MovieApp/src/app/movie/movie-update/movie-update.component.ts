@@ -1,26 +1,28 @@
-import { Component, OnInit } from '@angular/core';
-import { MovieService } from '../movie.service';
-import { FormsModule } from '@angular/forms';
-import { Genre, Movie } from '../movie-metadata.model';
-import { NgForOf } from '@angular/common';
-import {ToastrModule, ToastrService} from "ngx-toastr";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {FormsModule} from "@angular/forms";
+import {NgForOf} from "@angular/common";
+import {Genre, Movie} from "../movie-metadata.model";
+import {MovieService} from "../movie.service";
+import {ToastrService} from "ngx-toastr";
+import {ActivatedRoute, Router} from "@angular/router";
+
 @Component({
-  selector: 'app-movie-upload',
+  selector: 'app-movie-update',
   standalone: true,
-  imports: [
-    FormsModule,
-    NgForOf,
-  ],
-  templateUrl: './movie-upload.component.html',
-  styleUrl: './movie-upload.component.css'
+    imports: [
+        FormsModule,
+        NgForOf
+    ],
+  templateUrl: './movie-update.component.html',
+  styleUrl: './movie-update.component.css'
 })
-export class MovieUploadComponent implements OnInit {
+export class MovieUpdateComponent implements OnInit {
   selectedFile: File | null = null; // Variable to store the selected file
   selectedImageFile: File | null = null; // Variable to store the selected image file
   selectedGenres: Genre[] = []; // Array to store selected genres as Genre enum values
   genres: string[] = [];
   formattedDuration: string = '';
+  genreSelections: { [key: string]: boolean } = {};
 
   movie: Movie = {
     movieId: '',
@@ -37,10 +39,33 @@ export class MovieUploadComponent implements OnInit {
     image: '',
   };
 
-  constructor(private movieService: MovieService, private toastr: ToastrService) { }
+  constructor(private movieService: MovieService,
+              private router: Router,
+              private route: ActivatedRoute,
+              private cdr: ChangeDetectorRef,
+              private toastr: ToastrService) {
+  }
+
 
   ngOnInit() {
     this.genres = Object.values(Genre);
+    this.route.params.subscribe((params) => {
+      const movieId = params['movieId'];
+      const createdAt = params['createdAt'];
+      this.movieService.getMoviesMetadataById(movieId, createdAt).subscribe({
+        next: (data: any) => {
+          this.movie = data[0];
+          console.log(this.movie);
+          this.formattedDuration = this.formatDuration(this.movie.duration);
+          this.setGenreSelections();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.log(err);
+        }
+
+      })
+    });
   }
 
   onSubmit() {
@@ -51,7 +76,7 @@ export class MovieUploadComponent implements OnInit {
     this.updateMovieGenre();
 
     // Call service to upload movie metadata
-    this.sendUploadRequest();
+    this.sendUpdateRequest();
   }
 
   onFileSelected(event: Event) {
@@ -97,7 +122,7 @@ export class MovieUploadComponent implements OnInit {
     });
   }
 
-  sendUploadRequest() {
+  sendUpdateRequest() {
     if (this.selectedFile && this.selectedGenres.length > 0) {
       // convert movie to base64
       const movieReader = new FileReader();
@@ -113,12 +138,13 @@ export class MovieUploadComponent implements OnInit {
 
             if (movieContent && imageContent) {
               this.movie.image = imageContent; // Set the base64 string of the image to movie.image
-              this.movieService.uploadMovie(this.movie, movieContent)
+              this.movieService.updateMovie(this.movie, movieContent)
                 .subscribe(() => {
-                 this.toastr.success('Movie uploaded successfully', 'Success', {
-                    timeOut: 5000
-                  });
+                  this.toastr.success('Movie uploaded successfully', 'Success', {
+                      timeOut: 5000
+                    });
                 }, error => {
+                  console.log(error);
                   this.toastr.error('Error uploading', 'Error', {
                      timeOut: 5000
                    });
@@ -126,23 +152,62 @@ export class MovieUploadComponent implements OnInit {
             }
           };
         } else {
-          this.movieService.uploadMovie(this.movie, movieContent)
+          this.movieService.updateMovie(this.movie, movieContent)
             .subscribe(() => {
               this.toastr.success('Movie uploaded successfully', 'Success', {
-              timeOut: 5000
-            });
+                  timeOut: 5000
+                });
             }, error => {
-               console.log(error);
-               this.toastr.error('Error uploading', 'Error', {
-                 timeOut: 5000
-               });
+              console.log(error);
+              this.toastr.error('Error uploading', 'Error', {
+                   timeOut: 5000
+                 });
+
             });
         }
       };
-    }else{
-       this.toastr.error('Invalid form', 'Error', {
-       timeOut: 5000
-       });
+    } else {
+      if(this.selectedGenres.length > 0) {
+        if (this.selectedImageFile) {
+          const imageReader = new FileReader();
+          imageReader.readAsDataURL(this.selectedImageFile!);
+          imageReader.onload = () => {
+            const imageContent = imageReader.result as string;
+
+            if (imageContent) {
+              this.movie.image = imageContent;
+              this.movieService.updateMovie(this.movie, '')
+                .subscribe(() => {
+                  this.toastr.success('Movie uploaded successfully', 'Success', {
+                      timeOut: 5000
+                    });
+                }, error => {
+                  console.log(error);
+                  this.toastr.error('Error uploading', 'Error', {
+                     timeOut: 5000
+                   });
+                });
+            }
+          };
+        } else {
+          this.movieService.updateMovie(this.movie, '')
+            .subscribe(() => {
+              this.toastr.success('Movie uploaded successfully', 'Success', {
+                  timeOut: 5000
+                });
+            }, error => {
+              console.log(error);
+              this.toastr.error('Error uploading', 'Error', {
+                   timeOut: 5000
+                 });
+
+            });
+        }
+      }else{
+        this.toastr.error('Invalid form', 'Error', {
+           timeOut: 5000
+         });
+      }
     }
   }
 
@@ -172,5 +237,21 @@ export class MovieUploadComponent implements OnInit {
   padZero(num: number): string {
     return num < 10 ? '0' + num : num.toString();
   }
+
+   setGenreSelections() {
+    const genreCheckboxes = document.querySelectorAll('input[type="checkbox"][name="genre"]');
+    this.movie.genre = [];
+    genreCheckboxes.forEach(checkbox => {
+      if ((checkbox as HTMLInputElement).checked) {
+        const genre = (checkbox as HTMLInputElement).value;
+        const genreValue = Object.values(Genre).find(g => g === genre);
+        if(genreValue! in this.movie.genre){
+          (checkbox as HTMLInputElement).checked = true;
+          this.selectedGenres.push(genreValue!);
+        }
+      }
+    });
+  }
+
 
 }

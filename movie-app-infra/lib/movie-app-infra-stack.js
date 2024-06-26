@@ -173,6 +173,21 @@ class MovieAppInfraStack extends cdk.Stack {
     movieBucket.grantPut(uploadMovieLambda);
     movieTable.grantWriteData(uploadMovieLambda);
 
+    const updateMovieLambda = new lambda.Function(this, 'UpdateMovieFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'update_movie.lambda_handler',
+      environment: {
+        MOVIE_BUCKET_NAME: movieBucket.bucketName,
+        MOVIE_TABLE_NAME: movieTable.tableName,
+        SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+        EMAIL_QUEUE_URL: emailQueue.queueUrl,
+      },
+    });
+
+    movieBucket.grantPut(updateMovieLambda);
+    movieTable.grantWriteData(updateMovieLambda);
+
     // Download movie Lambda function
     const downloadMovieLambda = new lambda.Function(this, 'DownloadMovieFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -330,7 +345,7 @@ class MovieAppInfraStack extends cdk.Stack {
     const movieByIdResource = moviesResource.addResource('{movieId}');
     movieByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getMovieMetadataByIdLambda));
     movieByIdResource.addMethod('DELETE', new apigateway.LambdaIntegration(deleteMovieLambda));
-
+    movieByIdResource.addMethod('PUT', new apigateway.LambdaIntegration(updateMovieLambda));
 
     const streamMovieResource = moviesResource.addResource('stream').addResource('{movieId}');
     streamMovieResource.addMethod('GET', new apigateway.LambdaIntegration(viewContentLambda));

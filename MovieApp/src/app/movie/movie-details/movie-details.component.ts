@@ -85,7 +85,9 @@ export class MovieDetailsComponent {
     });
   }
 
-  updateMovie(){}
+  updateMovie(){
+    this.router.navigate(["/update/" + this.movie!.movieId + "/" + this.movie!.createdAt])
+  }
   deleteMovie() {
     const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
       data: { movie: this.movie },
