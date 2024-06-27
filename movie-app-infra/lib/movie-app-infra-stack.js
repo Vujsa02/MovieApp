@@ -54,6 +54,12 @@ class MovieAppInfraStack extends cdk.Stack {
     });
 
     movieTable.addGlobalSecondaryIndex({
+      indexName: 'SeriesIdIndex',
+      partitionKey: { name: 'seriesId', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    movieTable.addGlobalSecondaryIndex({
           indexName: 'DirectorIndex',
           partitionKey: { name: 'director', type: dynamodb.AttributeType.STRING },
           projectionType: dynamodb.ProjectionType.ALL,
@@ -244,6 +250,32 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieBucket.grantRead(downloadMovieLambda);
 
+    const queryMoviesBySeriesIdLambda = new lambda.Function(this, 'QueryMoviesBySeriesIdFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'get_all_episodes.lambda_handler',
+      environment: {
+        MOVIE_TABLE_NAME: movieTable.tableName,
+      },
+    });
+
+    // Grant DynamoDB read permissions to the Lambda function
+    movieTable.grantReadData(queryMoviesBySeriesIdLambda);
+
+
+    const episodesMoviesPolicy = new PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['dynamodb:Query'],
+      resources: [
+        movieTable.tableArn,
+        `${movieTable.tableArn}/index/SeriesIdIndex`,
+      ],
+    });
+
+    queryMoviesBySeriesIdLambda.addToRolePolicy(episodesMoviesPolicy);
+
+
+
     // Get movies metadata Lambda function
     const getMoviesMetadataLambda = new lambda.Function(this, 'GetMoviesMetadataFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -409,6 +441,10 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const subscribeResource = api.root.addResource('subscribe');
     subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
+
+    const seriesResource = api.root.addResource('episodes');
+    const episodesByIdResource = seriesResource.addResource('{seriesId}');
+    episodesByIdResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesBySeriesIdLambda));
 
 
 

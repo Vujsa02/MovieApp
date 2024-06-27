@@ -28,6 +28,7 @@ export class MovieDetailsComponent {
               private route: ActivatedRoute,
               private cdr: ChangeDetectorRef,
               private toastr: ToastrService,
+              private episodes: [],
               public dialog: MatDialog) {}
 
   ngOnInit() {
@@ -38,6 +39,14 @@ export class MovieDetailsComponent {
         next: (data: any)=>{
           this.movie = data[0];
           console.log(this.movie);
+          if (this.movie){
+            if(this.movie.fileName == ""){
+              this.movieService.getSeriesEpisodesById(this.movie.movieId).subscribe({
+                      next: (data: any)=>{
+                        this.episodes = data;
+                      }});
+            }
+          }
           this.cdr.detectChanges();
         },
       error: (err) => {

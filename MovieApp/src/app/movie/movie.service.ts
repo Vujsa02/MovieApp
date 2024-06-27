@@ -155,4 +155,8 @@ export class MovieService {
     return this.http.delete<any>(environment.apiGatewayHost + `movies/${movieId}?createdAt=${createdAt}`);
   }
 
+  getSeriesEpisodesById(movieId: string): Observable<any> {
+    return this.http.get<any>(environment.apiGatewayHost + `episodes/${movieId}`);
+  }
+
 }
