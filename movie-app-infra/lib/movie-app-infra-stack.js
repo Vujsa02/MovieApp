@@ -229,6 +229,7 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'get_movies_metadata.lambda_handler',
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
+        FEED_TABLE_NAME: userFeedTable.tableName,
       },
     });
 
