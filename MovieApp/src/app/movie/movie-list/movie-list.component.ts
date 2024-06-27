@@ -29,6 +29,8 @@ export class MovieListComponent implements OnInit {
   fetchMovies() {
     this.movieService.getMoviesMetadata().subscribe((movies) => {
       this.movies = movies;
+      this.filterEpisodes();
+
     });
   }
 

@@ -14,9 +14,7 @@ export class MovieService {
 
   // Method to get presigned URL and upload a movie
   uploadMovie(movie: Movie, fileContent: string): Observable<any> {
-    let payload = {}
-    if (fileContent == ""){
-      payload = {
+    let payload = {
       title: movie.title.toLowerCase(),
       description: movie.description.toLowerCase(),
       fileName: movie.fileName,
@@ -27,23 +25,16 @@ export class MovieService {
       director: movie.director.toLowerCase(),
       image: movie.image,
       content: fileContent,
-      seriesId: movie.seriesId,
       episodeNumber: new Decimal(movie.episodeNumber).toString(),
-      };
-    }else{
-       payload = {
-      title: movie.title.toLowerCase(),
-      description: movie.description.toLowerCase(),
-      fileName: movie.fileName,
-      actors: movie.actors,
-      movie_size: new Decimal(movie.movie_size).toString(),
-      genre: movie.genre,
-      duration: new Decimal(movie.duration).toString(),
-      director: movie.director.toLowerCase(),
-      image: movie.image,
-      seriesId: movie.seriesId,
-      episodeNumber: new Decimal(movie.episodeNumber).toString(),
-      };
+      seriesId: movie.seriesId
+    }
+
+    if(fileContent != ""){
+      payload.content = "Exists"
+    }
+
+    if(movie.seriesId == ""){
+      payload.seriesId = "None"
     }
 
     return this.http.post<any>(environment.apiGatewayHost + 'movies', payload).pipe(
@@ -72,9 +63,7 @@ export class MovieService {
   }
 
   updateMovie(movie: Movie, fileContent: string): Observable<any> {
-    let payload = {}
-    if (fileContent == ""){
-     payload = {
+    let payload = {
       title: movie.title.toLowerCase(),
       description: movie.description.toLowerCase(),
       fileName: movie.fileName,
@@ -85,23 +74,16 @@ export class MovieService {
       director: movie.director.toLowerCase(),
       image: movie.image,
       content: fileContent,
-      seriesId: movie.seriesId,
       episodeNumber: new Decimal(movie.episodeNumber).toString(),
-      };
-    }else{
-      payload = {
-      title: movie.title.toLowerCase(),
-      description: movie.description.toLowerCase(),
-      fileName: movie.fileName,
-      actors: movie.actors,
-      movie_size: new Decimal(movie.movie_size).toString(),
-      genre: movie.genre,
-      duration: new Decimal(movie.duration).toString(),
-      director: movie.director.toLowerCase(),
-      image: movie.image,
-      seriesId: movie.seriesId,
-      episodeNumber: new Decimal(movie.episodeNumber).toString(),
-      };
+      seriesId: movie.seriesId
+    }
+
+    if(fileContent != ""){
+      payload.content = "Exists"
+    }
+
+    if(movie.seriesId == ""){
+      payload.seriesId = "None"
     }
 
 

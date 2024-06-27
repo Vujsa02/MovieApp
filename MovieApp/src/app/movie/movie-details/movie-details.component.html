@@ -4,10 +4,10 @@
  <video #videoPlayer controls class="video-container" (click)="watchVideo()">
   Your browser does not support the video tag.
   </video>
-    <div class="side-by-side">
+    <div *ngIf="movie" class="side-by-side">
         <button class="download-button" (click)="downloadMovie()">Download movie</button>
         <button class="download-button" (click)="openReviewDialog()">Add your review</button>
-      <button class="download-button" (click)="openUploadEpisode()">Upload episode</button>
+      <button *ngIf="movie.fileName == ''" class="download-button" (click)="openUploadEpisode()">Upload episode</button>
     </div>
   </div>
 
@@ -26,4 +26,14 @@
     </div>
   </div>
 </div>
+<div class="side-by-side">
+  <mat-card *ngFor="let episode of episodes">
+  <div class="flex-row">
+      <div class="image-container">
+      <img [src]="getImageSrc()" alt="Movie Image" class="movie-image">
+      <button class="episode-button" (click)="chooseEpisode(episode)">Watch episode</button>
+    </div>
+      <span class="title">{{episode.title}}</span>
+  </div>
+</mat-card></div>
 

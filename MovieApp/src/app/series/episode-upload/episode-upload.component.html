@@ -1,13 +1,13 @@
 <div class="background">
   <div class="title">
-    <h1>Update Movie</h1>
+    <h1>Upload Episode</h1>
   </div>
 
   <form style="text-align: center" (ngSubmit)="onSubmit()" #movieForm="ngForm">
     <div class="form-group side-by-side">
       <div class="full-width">
         <label for="title" class="label">Title:</label>
-        <input type="text" id="title" class="form-control" required [(ngModel)]="movie.title" name="title" #title="ngModel" disabled>
+        <input type="text" id="title" class="form-control" required [(ngModel)]="movie.title" name="title" #title="ngModel" >
       </div>
       <div class="full-width">
         <label for="director" class="label">Director:</label>
@@ -19,7 +19,7 @@
     <div class="form-group side-by-side">
       <div class="full-width">
         <label for="description" class="label">Description:</label>
-        <textarea id="description" class="form-control" required [(ngModel)]="movie.description" name="description" #description="ngModel" disabled></textarea>
+        <textarea id="description" class="form-control" required [(ngModel)]="movie.description" name="description" #description="ngModel" ></textarea>
       </div>
       <div class="full-width">
         <label for="episode" class="label">Episode number:</label>

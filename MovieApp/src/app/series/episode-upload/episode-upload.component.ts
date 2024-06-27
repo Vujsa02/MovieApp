@@ -59,10 +59,7 @@ export class EpisodeUploadComponent {
       this.movieService.getMoviesMetadataById(movieId, createdAt).subscribe({
         next: (data: any) => {
           this.movie = data[0];
-          this.movie.seriesId = this.movie.movieId
-          this.movie.movieId = ""
-          this.movie.episodeNumber= 1
-          console.log(this.movie);
+          this.setUploadFields();
           this.formattedDuration = this.formatDuration(this.movie.duration);
           this.setGenreSelections();
           this.cdr.detectChanges();
@@ -73,6 +70,14 @@ export class EpisodeUploadComponent {
 
       })
     });
+  }
+
+  setUploadFields(){
+    this.movie.seriesId = this.movie.movieId
+    this.movie.movieId = ""
+    this.movie.title = ""
+    this.movie.description = ""
+    this.movie.episodeNumber= 1
   }
 
   onSubmit() {
