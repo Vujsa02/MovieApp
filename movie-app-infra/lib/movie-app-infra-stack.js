@@ -15,6 +15,10 @@ const {PolicyStatement} = require("aws-cdk-lib/aws-iam");
 const eventSources = require('aws-cdk-lib/aws-lambda-event-sources');
 const sources = require('aws-cdk-lib/aws-lambda-event-sources');
 const destinations = require('aws-cdk-lib/aws-lambda-destinations');
+const { Stack } = cdk;
+const { WebSocketApi, WebSocketStage, WebSocketIntegration} = require('aws-cdk-lib/aws-apigatewayv2');
+const { WebSocketLambdaIntegration } = require('@aws-cdk/aws-apigatewayv2-integrations-alpha');
+const {IntegrationType} = require("aws-cdk-lib/aws-apigateway");
 
 class MovieAppInfraStack extends cdk.Stack {
   constructor(scope, id, props) {
@@ -171,7 +175,7 @@ class MovieAppInfraStack extends cdk.Stack {
       value: userPoolDomain.domainName,
     });
 
-    // SNS Topic for notifications
+    // SNS Topic for notifications on Angular app
     const topic = new sns.Topic(this, 'MovieTopic');
 
     // Upload movie Lambda function
@@ -357,6 +361,7 @@ class MovieAppInfraStack extends cdk.Stack {
         USER_FEED_TABLE_NAME: userFeedTable.tableName,
         USER_INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
         MOVIE_TABLE_NAME: movieTable.tableName,
+        SNS_TOPIC_ARN: topic.topicArn,
       }
     });
 
@@ -370,6 +375,10 @@ class MovieAppInfraStack extends cdk.Stack {
       actions: ['dynamodb:GetItem'],
       resources: [userInteractionsTable.tableArn],
     }));
+    updateFeedLambda.addToRolePolicy(new PolicyStatement({
+        actions: ['sns:Publish'],
+        resources: [topic.topicArn],
+    }));
 
     const deadLetterQueue = new sqs.Queue(this, 'DeadLetterQueue');
 
@@ -382,6 +391,50 @@ class MovieAppInfraStack extends cdk.Stack {
       retryAttempts: 10,
     }));
 
+
+    // Create WebSocket API
+    const webSocketApi = new WebSocketApi(this, 'MovieWebSocketApi', {
+      apiName: 'MovieWebSocketApi',
+    });
+
+    // Create WebSocket Stage
+    new WebSocketStage(this, 'MovieWebSocketStage', {
+      webSocketApi,
+      stageName: 'dev',
+      autoDeploy: true,
+    });
+
+    // Create WebSocket Lambda function
+    const webSocketHandler = new lambda.Function(this, 'WebSocketHandler', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      handler: 'websocket.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, 'lambda')),
+      environment: {
+        USER_FEED_TABLE_NAME: userFeedTable.tableName,
+      },
+    });
+
+    // Allow Lambda to publish to SNS
+    webSocketHandler.addToRolePolicy(new PolicyStatement({
+      actions: ['sns:Publish'],
+      resources: [topic.topicArn],
+    }));
+
+    // Subscribe Lambda function to SNS topic
+    topic.addSubscription(new subscriptions.LambdaSubscription(webSocketHandler));
+
+    // Define WebSocket integration for Lambda
+    const integration = new WebSocketLambdaIntegration('WebSocketIntegration', webSocketHandler);
+
+    // Add WebSocket route
+    webSocketApi.addRoute('sendmessage', {
+      integration,
+    });
+
+    // Output WebSocket API endpoint URL
+    new cdk.CfnOutput(this, 'WebSocketApiUrl', {
+      value: webSocketApi.apiEndpoint,
+    });
 
 
     // API Gateway

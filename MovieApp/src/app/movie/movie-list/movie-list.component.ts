@@ -1,7 +1,9 @@
 // movie-list.component.ts
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {MovieService} from "../movie.service";
 import {Genre, Movie} from "../movie-metadata.model";
+import {Subscription} from "rxjs";
+import {WebSocketService} from "../../sub/web-socket.service";
 
 
 @Component({
@@ -9,8 +11,9 @@ import {Genre, Movie} from "../movie-metadata.model";
   templateUrl: './movie-list.component.html',
   styleUrls: ['./movie-list.component.css']
 })
-export class MovieListComponent implements OnInit {
+export class MovieListComponent implements OnInit, OnDestroy {
   movies: Movie[] = [];
+  private subscription: Subscription | undefined;
   filteredMovies: Movie[] = [];
   searchCriteria = {
     title: '',
@@ -20,10 +23,22 @@ export class MovieListComponent implements OnInit {
     genre: ''
   };
 
-  constructor(private movieService: MovieService) {}
+  constructor(private movieService: MovieService, private websocketService: WebSocketService) {}
 
   ngOnInit() {
-    this.fetchMovies();
+    // this.fetchMovies();
+    this.subscription = this.websocketService.connect().subscribe(
+      (message) => {
+      console.log(message);
+      this.fetchMovies();
+    }, (error) => {
+      console.log(error);
+    });
+  }
+  ngOnDestroy(): void {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
   }
 
   fetchMovies() {
