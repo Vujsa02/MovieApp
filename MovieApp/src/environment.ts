@@ -1,6 +1,6 @@
 export const environment = {
-  apiGatewayHost: 'https://ev4zvyi2mh.execute-api.eu-central-1.amazonaws.com/prod/',
-  userPoolId: "eu-central-1_ekWSfC465",
-  clientId: "1402ifp8kkkf1h3vtfmbklmc62",
+  apiGatewayHost: 'https://zq4k27gxf9.execute-api.eu-central-1.amazonaws.com/prod/',
+  userPoolId: "eu-central-1_aHqCdJsyc",
+  clientId: "334nb1v9rtdjj73pjtqdkm9dd",
   defaultImage: 'assets/icons/movieBackgroundBlack.png'
 }
