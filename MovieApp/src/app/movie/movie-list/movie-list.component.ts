@@ -3,7 +3,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {MovieService} from "../movie.service";
 import {Genre, Movie} from "../movie-metadata.model";
 import {Subscription} from "rxjs";
-import {WebSocketService} from "../../sub/web-socket.service";
+import {AwsCognitoService} from "../../auth/aws-cognito.service";
 
 
 @Component({
@@ -23,17 +23,10 @@ export class MovieListComponent implements OnInit, OnDestroy {
     genre: ''
   };
 
-  constructor(private movieService: MovieService, private websocketService: WebSocketService) {}
+  constructor(private movieService: MovieService, private cognitoService: AwsCognitoService) {}
 
   ngOnInit() {
-    // this.fetchMovies();
-    this.subscription = this.websocketService.connect().subscribe(
-      (message) => {
-      console.log(message);
-      this.fetchMovies();
-    }, (error) => {
-      console.log(error);
-    });
+    this.fetchMovies();
   }
   ngOnDestroy(): void {
     if (this.subscription) {
@@ -42,7 +35,7 @@ export class MovieListComponent implements OnInit, OnDestroy {
   }
 
   fetchMovies() {
-    this.movieService.getMoviesMetadata().subscribe((movies) => {
+    this.movieService.getMoviesMetadata(this.cognitoService.getCurrentUsername()).subscribe((movies) => {
       this.movies = movies;
       this.filterEpisodes();
 

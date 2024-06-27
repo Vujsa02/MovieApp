@@ -20,6 +20,17 @@ def lambda_handler(event, context):
     try:
         username = event['queryStringParameters']['username']
         movies = scan_table(movie_table)
+        if not username:
+            movies = scan_table(movie_table)
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                },
+                'body': json.dumps(movies)
+            }
         # get user feed
         response = feed_table.get_item(Key={'userId': username})
         if 'Item' in response:

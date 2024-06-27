@@ -14,11 +14,13 @@ genres_table_name = os.environ['GENRES_TABLE_NAME']
 actors_table_name = os.environ['ACTORS_TABLE_NAME']
 subscription_table_name = os.environ['SUBSCRIPTION_TABLE_NAME']
 email_queue_url = os.environ['EMAIL_QUEUE_URL']
+interactions_table_name = os.environ['INTERACTIONS_TABLE_NAME']
 
 table = dynamodb.Table(movie_table_name)
 genres_table = dynamodb.Table(genres_table_name)
 actors_table = dynamodb.Table(actors_table_name)
 subscription_table = dynamodb.Table(subscription_table_name)
+interactions_table = dynamodb.Table(interactions_table_name)
 sqs = boto3.client('sqs')
 
 def lambda_handler(event, context):
@@ -136,6 +138,17 @@ def lambda_handler(event, context):
                     QueueUrl=email_queue_url,
                     MessageBody=json.dumps(message)
                 )
+
+        # add user 'mika' to the interactions table
+        data = interactions_table.scan()
+        # add column to every user in interactions table
+        for item in data['Items']:
+            item['krmadija'] = 0
+            interactions_table.put_item(Item=item)
+        for item in data['Items']:
+            item.pop('krmadija', None)
+            interactions_table.put_item(Item=item)
+
 
         return {
             'statusCode': 200,

@@ -127,8 +127,10 @@ export class MovieService {
   }
 
   // Method to fetch all movies metadata
-  getMoviesMetadata(): Observable<any> {
-    return this.http.get<any>(environment.apiGatewayHost + 'movies');
+  getMoviesMetadata(username: string = ''): Observable<any> {
+    let params = new HttpParams();
+    params = params.append('username', username);
+    return this.http.get<any>(environment.apiGatewayHost + 'movies', { params });
   }
 
   // Method to fetch movie metadata by ID and createdAt
@@ -157,7 +159,9 @@ export class MovieService {
   }
 
   createMovieReview(review: object):Observable<any>{
-    return this.http.post<any>(environment.apiGatewayHost + `reviews`, review);
+    let params = new HttpParams();
+    params = params.append('username', this.cognitoService.getCurrentUsername());
+    return this.http.post<any>(environment.apiGatewayHost + `reviews`, review, {params});
   }
 
 }

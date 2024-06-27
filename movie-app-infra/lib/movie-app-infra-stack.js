@@ -222,6 +222,7 @@ class MovieAppInfraStack extends cdk.Stack {
         ACTORS_TABLE_NAME: actorsTable.tableName,
         SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
         EMAIL_QUEUE_URL: emailQueue.queueUrl,
+        INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
       },
     });
 
@@ -448,6 +449,7 @@ class MovieAppInfraStack extends cdk.Stack {
     userFeedTable.grantReadWriteData(updateFeedLambda);
     userInteractionsTable.grantStreamRead(updateFeedLambda);
     userInteractionsTable.grantReadWriteData(updateFeedLambda);
+    userInteractionsTable.grantReadWriteData(uploadMovieLambda);
     movieTable.grantReadData(updateFeedLambda);
 
     updateFeedLambda.addToRolePolicy(new PolicyStatement({

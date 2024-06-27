@@ -12,11 +12,10 @@ interactions_table = dynamodb.Table(os.environ['INTERACTIONS_TABLE_NAME'])
 
 def lambda_handler(event, context):
     body = json.loads(event['body'])
-    movie_id = body['movieId']
-    user_id = body['userId']
+    # movie_id = body['movieId']
     rating = body['rating']  # Expecting "like", "love", or "dislike"
-    # TODO: return all info about the movie
-    info = body['info']
+    info = body['movie_param']
+    user_id = event['queryStringParameters']['username']
 
     # Validate the rating
     if rating not in ['like', 'love', 'dislike']:
@@ -30,24 +29,24 @@ def lambda_handler(event, context):
             'body': json.dumps({'error': 'Invalid rating value. Must be like, love, or dislike.'})
         }
 
-    review_id = str(uuid.uuid4())
-    created_at = datetime.utcnow().isoformat()
-    updated_at = created_at
+    # review_id = str(uuid.uuid4())
+    # created_at = datetime.utcnow().isoformat()
+    # updated_at = created_at
 
-    db_params = {
-        'reviewId': review_id,
-        'movieId': movie_id,
-        'userId': user_id,
-        'rating': rating,
-        'createdAt': created_at,
-        'updatedAt': updated_at,
-    }
+    # db_params = {
+    #     'reviewId': review_id,
+    #     # 'movieId': movie_id,
+    #     'userId': user_id,
+    #     'rating': rating,
+    #     'createdAt': created_at,
+    #     'updatedAt': updated_at,
+    # }
 
     try:
         # Save review to DynamoDB
-        print('Saving review to DynamoDB:', db_params)
-        table.put_item(Item=db_params)
-        print('Review saved to DynamoDB')
+        # print('Saving review to DynamoDB:', db_params)
+        # table.put_item(Item=db_params)
+        # print('Review saved to DynamoDB')
 
         # Update interactions table, love +2, like +1, dislike -3, if item from info list is not in interactions table, add it with value 1
         response = interactions_table.get_item(Key={'userId': user_id})
@@ -83,7 +82,7 @@ def lambda_handler(event, context):
             },
             'body': json.dumps({
                 'message': 'Review added successfully',
-                'reviewId': review_id
+                'reviewId': 'review_id'
             })
         }
     except Exception as e:
