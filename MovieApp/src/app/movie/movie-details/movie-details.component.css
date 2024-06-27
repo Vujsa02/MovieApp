@@ -64,7 +64,7 @@ body {
   border-radius: 5px;
   width:200px;
   margin-top: 20px;
-  margin-left:20px;
+  margin-right:20px;
   font-weight: bold;
 }
 
@@ -125,6 +125,13 @@ body {
   margin: 20px;
   display: flex;
 }
+
+.side-by-side-episode {
+  margin-left:auto;
+  margin-right: 60px;
+  display: flex;
+  justify-content: space-between;
+}
 /* movie-card.component.css */
 
 .icon-image {
@@ -170,6 +177,10 @@ body {
   display: block; /* Show the button on hover */
 }
 
+.image-container:hover .edit-button {
+  display: block; /* Show the button on hover */
+}
+
 .episode-button {
   position: absolute;
   top: 50%;
@@ -188,5 +199,35 @@ body {
 
 .episode-button:hover {
   background-color: #475bcb; /* Darker blue on hover */
+}
+
+.edit-button {
+  position: absolute;
+  top: 80%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none; /* Hide the button by default */
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 20px;
+  width:150px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.edit-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+.series-title{
+  font-size: 23px;
+  margin-bottom: 10px;
+}
+
+.series-duration {
+    font-size: 20px;
+    margin-bottom: 10px;
 }
 

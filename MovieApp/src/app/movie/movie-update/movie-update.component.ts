@@ -1,6 +1,6 @@
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {FormsModule} from "@angular/forms";
-import {NgForOf} from "@angular/common";
+import {NgForOf, NgIf} from "@angular/common";
 import {Genre, Movie} from "../movie-metadata.model";
 import {MovieService} from "../movie.service";
 import {ToastrService} from "ngx-toastr";
@@ -9,10 +9,11 @@ import {ActivatedRoute, Router} from "@angular/router";
 @Component({
   selector: 'app-movie-update',
   standalone: true,
-    imports: [
-        FormsModule,
-        NgForOf
-    ],
+  imports: [
+    FormsModule,
+    NgForOf,
+    NgIf
+  ],
   templateUrl: './movie-update.component.html',
   styleUrl: './movie-update.component.css'
 })
@@ -72,7 +73,7 @@ export class MovieUpdateComponent implements OnInit {
 
   onSubmit() {
     // Convert actors from comma separated string to array
-    this.movie.actors = this.movie.actors.toString().split(',').map(actor => actor.trim());
+    this.movie.actors = this.movie.actors.toString().toLowerCase().split(',').map(actor => actor.trim());
 
     // Convert selectedGenres from strings to Genre enum values
     this.updateMovieGenre();
@@ -142,9 +143,10 @@ export class MovieUpdateComponent implements OnInit {
               this.movie.image = imageContent; // Set the base64 string of the image to movie.image
               this.movieService.updateMovie(this.movie, movieContent)
                 .subscribe(() => {
-                  this.toastr.success('Movie updated successfully', 'Success', {
+                  this.toastr.success('Movie/series updated successfully', 'Success', {
                       timeOut: 5000
                     });
+                  this.router.navigate(["/home"]);
                 }, error => {
                   console.log(error);
                   this.toastr.error('Error updating', 'Error', {
@@ -156,9 +158,11 @@ export class MovieUpdateComponent implements OnInit {
         } else {
           this.movieService.updateMovie(this.movie, movieContent)
             .subscribe(() => {
-              this.toastr.success('Movie updated successfully', 'Success', {
+              this.toastr.success('Movie/series updated successfully', 'Success', {
                   timeOut: 5000
                 });
+                this.router.navigate(["/home"])
+
             }, error => {
               console.log(error);
               this.toastr.error('Error updating', 'Error', {
@@ -180,9 +184,10 @@ export class MovieUpdateComponent implements OnInit {
               this.movie.image = imageContent;
               this.movieService.updateMovie(this.movie, '')
                 .subscribe(() => {
-                  this.toastr.success('Movie updated successfully', 'Success', {
+                  this.toastr.success('Movie/series updated successfully', 'Success', {
                       timeOut: 5000
                     });
+                  this.router.navigate(["/home"])
                 }, error => {
                   console.log(error);
                   this.toastr.error('Error updating', 'Error', {
@@ -194,9 +199,10 @@ export class MovieUpdateComponent implements OnInit {
         } else {
           this.movieService.updateMovie(this.movie, '')
             .subscribe(() => {
-              this.toastr.success('Movie updated successfully', 'Success', {
+              this.toastr.success('Movie/series updated successfully', 'Success', {
                   timeOut: 5000
                 });
+              this.router.navigate(["/home"])
             }, error => {
               console.log(error);
               this.toastr.error('Error updating', 'Error', {

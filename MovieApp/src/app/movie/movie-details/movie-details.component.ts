@@ -27,7 +27,6 @@ import {MatCard} from "@angular/material/card";
 export class MovieDetailsComponent {
   @Input() movie: Movie | undefined;
   episodes: Movie[] = [];
-  episodeId: string = "";
   currentEpisode: Movie | undefined;
   @ViewChild('videoPlayer') videoPlayer: ElementRef | undefined;
   constructor(private movieService: MovieService,
@@ -79,8 +78,8 @@ export class MovieDetailsComponent {
     return this.movie?.image ?  this.movie.image : environment.defaultImage;
   }
 
-   getRoundedDuration(): number {
-    return this.movie ? Math.ceil(Number(this.movie.duration)) : 0;
+   getRoundedDuration(movie:Movie): number {
+    return movie ? Math.ceil(Number(movie.duration)) : 1;
   }
 
   watchVideo() {
@@ -127,7 +126,7 @@ export class MovieDetailsComponent {
   }
 
   updateMovie(){
-    this.router.navigate(["/update/" + this.movie!.movieId + "/" + this.movie!.createdAt])
+    this.router.navigate(["/update/movie/" + this.movie!.movieId + "/" + this.movie!.createdAt])
   }
   deleteMovie() {
     const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
@@ -183,5 +182,8 @@ export class MovieDetailsComponent {
     this.watchVideo();
   }
 
+  editEpisode(episode: Movie){
+    this.router.navigate([`update/episode/${episode?.movieId}/${episode?.createdAt}`])
+  }
   protected readonly open = open;
 }
