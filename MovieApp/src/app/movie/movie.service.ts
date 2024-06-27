@@ -23,7 +23,9 @@ export class MovieService {
       genre: movie.genre,
       duration: new Decimal(movie.duration).toString(),
       director: movie.director,
-      image: movie.image
+      image: movie.image,
+      seriesId: movie.seriesId,
+      episodeNumber: movie.episodeNumber
     };
 
     return this.http.post<any>(environment.apiGatewayHost + 'movies', payload).pipe(
@@ -62,7 +64,9 @@ export class MovieService {
       duration: new Decimal(movie.duration).toString(),
       director: movie.director,
       image: movie.image,
-      content: fileContent
+      content: fileContent,
+      seriesId: movie.seriesId,
+      episodeNumber: movie.episodeNumber
       };
     }else{
       payload = {
