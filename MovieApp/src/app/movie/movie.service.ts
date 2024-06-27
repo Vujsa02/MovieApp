@@ -141,4 +141,8 @@ export class MovieService {
     return this.http.get<any>(environment.apiGatewayHost + `episodes/${movieId}`);
   }
 
+  createMovieReview(review: object):Observable<any>{
+    return this.http.post<any>(environment.apiGatewayHost + `reviews`, review);
+  }
+
 }

@@ -7,9 +7,9 @@
 
 form {
   display: flex;
-  flex-direction: column;
-  width: 80%;
-  max-width: 600px;
+  flex-wrap: wrap;
+  width: 90%;
+  max-width: 700px;
   margin-bottom: 20px;
   background: #f9f9f9;
   padding: 20px;
@@ -18,7 +18,13 @@ form {
 }
 
 form div {
+  flex: 1 1 45%; /* Adjusts the width of each input to 45% of the form's width */
   margin-bottom: 15px;
+  margin-right: 10px; /* Space between inputs */
+}
+
+form div:last-child {
+  margin-right: 0; /* Remove right margin from the last input */
 }
 
 label {
@@ -46,8 +52,9 @@ button {
   padding: 10px 20px;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin: 20px;
+  margin: 10px;
   border-radius: 4px;
+  margin-top: 20px;
 }
 
 .nav-item1 {
@@ -57,7 +64,7 @@ button {
   padding: 10px 20px;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin: 20px;
+  margin: 10px;
   border-radius: 4px;
 }
 
@@ -68,27 +75,31 @@ button {
   padding: 10px 20px;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin: 20px;
+  margin: 10px;
   border-radius: 4px;
 }
 
 .nav-item:hover {
   background-color: #536DFE; /* slightly brighter color on hover */
 }
+
 .nav-item1:hover {
   background-color: #FFCBCB; /* slightly brighter color on hover */
 }
+
 .nav-item2:hover {
   background-color: #FF7557; /* slightly brighter color on hover */
 }
 
-.movie-list{
+.movie-list {
   margin-right: 10px;
 }
-.app-movie-card{
+
+.app-movie-card {
   margin-right: 20px;
   padding: 20px;
 }
+
 .side-by-side {
   margin: 20px;
   display: flex;
