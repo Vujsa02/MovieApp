@@ -16,6 +16,7 @@ def scan_table(table_name):
     return items
 
 
+
 def lambda_handler(event, context):
     try:
         username = event['queryStringParameters']['username']
@@ -52,6 +53,11 @@ def lambda_handler(event, context):
             sorted_movies = []
         if len(sorted_movies) == 0:
             sorted_movies = movies
+
+        # Handle pagination
+        while 'LastEvaluatedKey' in response:
+            response = movie_table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            movies.extend(response.get('Items', []))
 
         return {
             'statusCode': 200,
