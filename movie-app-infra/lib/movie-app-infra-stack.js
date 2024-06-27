@@ -13,6 +13,12 @@ const path = require('path');
 const sqs = require('aws-cdk-lib/aws-sqs');
 const {PolicyStatement} = require("aws-cdk-lib/aws-iam");
 const eventSources = require('aws-cdk-lib/aws-lambda-event-sources');
+const sources = require('aws-cdk-lib/aws-lambda-event-sources');
+const destinations = require('aws-cdk-lib/aws-lambda-destinations');
+const { Stack } = cdk;
+const { WebSocketApi, WebSocketStage, WebSocketIntegration} = require('aws-cdk-lib/aws-apigatewayv2');
+const { WebSocketLambdaIntegration } = require('@aws-cdk/aws-apigatewayv2-integrations-alpha');
+const {IntegrationType} = require("aws-cdk-lib/aws-apigateway");
 
 class MovieAppInfraStack extends cdk.Stack {
   constructor(scope, id, props) {
@@ -124,6 +130,7 @@ class MovieAppInfraStack extends cdk.Stack {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       tableName: "mmm-user-interactions-table",
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
     });
 
 
@@ -200,7 +207,7 @@ class MovieAppInfraStack extends cdk.Stack {
       value: userPoolDomain.domainName,
     });
 
-    // SNS Topic for notifications
+    // SNS Topic for notifications on Angular app
     const topic = new sns.Topic(this, 'MovieTopic');
 
     // Upload movie Lambda function
@@ -215,6 +222,7 @@ class MovieAppInfraStack extends cdk.Stack {
         ACTORS_TABLE_NAME: actorsTable.tableName,
         SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
         EMAIL_QUEUE_URL: emailQueue.queueUrl,
+        INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
       },
     });
 
@@ -222,6 +230,14 @@ class MovieAppInfraStack extends cdk.Stack {
     movieTable.grantWriteData(uploadMovieLambda);
     genresTable.grantWriteData(uploadMovieLambda);
     actorsTable.grantWriteData(uploadMovieLambda);
+
+    // Add policy to allow dynamodb:Query action
+    uploadMovieLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['dynamodb:Query'],
+      resources: [
+        `${movieTable.tableArn}/index/SeriesIdIndex`
+      ]
+    }));
 
     const updateMovieLambda = new lambda.Function(this, 'UpdateMovieFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -245,6 +261,7 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'download_movie.lambda_handler',
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
+        INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
       },
     });
 
@@ -283,10 +300,12 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'get_movies_metadata.lambda_handler',
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
+        FEED_TABLE_NAME: userFeedTable.tableName,
       },
     });
 
     movieTable.grantReadData(getMoviesMetadataLambda);
+    userFeedTable.grantReadData(getMoviesMetadataLambda);
 
     const getMovieMetadataByIdLambda = new lambda.Function(this, 'GetMovieMetadataByIdFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -318,6 +337,7 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'add_review.lambda_handler',
       environment: {
         REVIEW_TABLE_NAME: reviewTable.tableName,
+        INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
       },
     });
 
@@ -374,8 +394,8 @@ class MovieAppInfraStack extends cdk.Stack {
     subscriptionTable.grantReadData(uploadMovieLambda);
     emailQueue.grantSendMessages(uploadMovieLambda);
     userInteractionsTable.grantReadWriteData(subscribeLambda);
-    userInteractionsTable.grantReadWriteData(updateMovieLambda);
     userInteractionsTable.grantReadWriteData(addReviewLambda);
+    userInteractionsTable.grantReadWriteData(downloadMovieLambda);
 
     // Lambda Function for Sending Emails
     const sendEmailLambda = new lambda.Function(this, 'SendEmailFunction', {
@@ -412,6 +432,47 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieBucket.grantDelete(deleteMovieLambda);
     movieTable.grantReadWriteData(deleteMovieLambda);
+
+    const updateFeedLambda = new lambda.Function(this, 'UpdateFeedLambda', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      handler: 'feed_update.lambda_handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      environment: {
+        USER_FEED_TABLE_NAME: userFeedTable.tableName,
+        USER_INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
+        MOVIE_TABLE_NAME: movieTable.tableName,
+        SNS_TOPIC_ARN: topic.topicArn,
+      }
+    });
+
+    // Grant necessary permissions to the Lambda function
+    userFeedTable.grantReadWriteData(updateFeedLambda);
+    userInteractionsTable.grantStreamRead(updateFeedLambda);
+    userInteractionsTable.grantReadWriteData(updateFeedLambda);
+    userInteractionsTable.grantReadWriteData(uploadMovieLambda);
+    movieTable.grantReadData(updateFeedLambda);
+
+    updateFeedLambda.addToRolePolicy(new PolicyStatement({
+      actions: ['dynamodb:GetItem'],
+      resources: [userInteractionsTable.tableArn],
+    }));
+    updateFeedLambda.addToRolePolicy(new PolicyStatement({
+        actions: ['sns:Publish'],
+        resources: [topic.topicArn],
+    }));
+
+    const deadLetterQueue = new sqs.Queue(this, 'DeadLetterQueue');
+
+    // Create event source mapping to trigger the Lambda function on DynamoDB stream events
+    updateFeedLambda.addEventSource(new sources.DynamoEventSource(userInteractionsTable, {
+      startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+      batchSize: 5,
+      bisectBatchOnFunctionError: true,
+      onFailure: new destinations.SqsDestination(deadLetterQueue),
+      retryAttempts: 10,
+    }));
+
+
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {

@@ -1,7 +1,9 @@
 // movie-list.component.ts
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {MovieService} from "../movie.service";
 import {Genre, Movie} from "../movie-metadata.model";
+import {Subscription} from "rxjs";
+import {AwsCognitoService} from "../../auth/aws-cognito.service";
 
 
 @Component({
@@ -9,8 +11,9 @@ import {Genre, Movie} from "../movie-metadata.model";
   templateUrl: './movie-list.component.html',
   styleUrls: ['./movie-list.component.css']
 })
-export class MovieListComponent implements OnInit {
+export class MovieListComponent implements OnInit, OnDestroy {
   movies: Movie[] = [];
+  private subscription: Subscription | undefined;
   filteredMovies: Movie[] = [];
   searchCriteria = {
     title: '',
@@ -20,14 +23,19 @@ export class MovieListComponent implements OnInit {
     genre: ''
   };
 
-  constructor(private movieService: MovieService) {}
+  constructor(private movieService: MovieService, private cognitoService: AwsCognitoService) {}
 
   ngOnInit() {
     this.fetchMovies();
   }
+  ngOnDestroy(): void {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
 
   fetchMovies() {
-    this.movieService.getMoviesMetadata().subscribe((movies) => {
+    this.movieService.getMoviesMetadata(this.cognitoService.getCurrentUsername()).subscribe((movies) => {
       this.movies = movies;
       this.filterEpisodes();
 

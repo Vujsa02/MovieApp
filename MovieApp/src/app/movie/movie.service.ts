@@ -1,16 +1,18 @@
-import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {forkJoin, Observable, of} from 'rxjs';
-import {switchMap} from 'rxjs/operators';
-import {Movie} from './movie-metadata.model'; // Adjust path as per your project structure
+import { Injectable } from '@angular/core';
+import {HttpClient, HttpParams} from '@angular/common/http';
+import {Observable, of, forkJoin} from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import {Movie} from "./movie-metadata.model";
 import Decimal from 'decimal.js';
-import {environment} from '../../environment';
+import {environment} from "../../environment";
+import {AwsCognitoService} from "../auth/aws-cognito.service";
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class MovieService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cognitoService: AwsCognitoService) {}
 
   // Method to upload a movie with optional file content
   uploadMovie(movie: Movie, fileContent: string): Observable<any> {
@@ -115,16 +117,20 @@ export class MovieService {
     return new Uint8Array(byteNumbers);
   }
 
-  // Other methods for fetching data
+  // Method to get presigned URL and download a movie
+  getPresignedUrl(movieId: string, movieInfo: string[]): Observable<any> {
+    let params = new HttpParams();
+    params = params.append('info', JSON.stringify(movieInfo));
+    params = params.append('username', this.cognitoService.getCurrentUsername());
 
-  // Method to get presigned URL for downloading a movie
-  getPresignedUrl(movieId: string): Observable<any> {
-    return this.http.get<any>(environment.apiGatewayHost + `movies/download/${movieId}`);
+    return this.http.get<any>(environment.apiGatewayHost + `movies/download/${movieId}`, { params });
   }
 
   // Method to fetch all movies metadata
-  getMoviesMetadata(): Observable<any> {
-    return this.http.get<any>(environment.apiGatewayHost + 'movies');
+  getMoviesMetadata(username: string = ''): Observable<any> {
+    let params = new HttpParams();
+    params = params.append('username', username);
+    return this.http.get<any>(environment.apiGatewayHost + 'movies', { params });
   }
 
   // Method to fetch movie metadata by ID and createdAt
@@ -153,7 +159,9 @@ export class MovieService {
   }
 
   createMovieReview(review: object):Observable<any>{
-    return this.http.post<any>(environment.apiGatewayHost + `reviews`, review);
+    let params = new HttpParams();
+    params = params.append('username', this.cognitoService.getCurrentUsername());
+    return this.http.post<any>(environment.apiGatewayHost + `reviews`, review, {params});
   }
 
 }
