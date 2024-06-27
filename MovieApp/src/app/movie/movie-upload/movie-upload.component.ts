@@ -5,6 +5,7 @@ import { Genre, Movie } from '../movie-metadata.model';
 import { NgForOf } from '@angular/common';
 import {ToastrModule, ToastrService} from "ngx-toastr";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {Router} from "@angular/router";
 @Component({
   selector: 'app-movie-upload',
   standalone: true,
@@ -35,9 +36,11 @@ export class MovieUploadComponent implements OnInit {
     createdAt: '',
     updatedAt: '',
     image: '',
+    episodeNumber: 0,
+    seriesId: ''
   };
 
-  constructor(private movieService: MovieService, private toastr: ToastrService) { }
+  constructor(private movieService: MovieService, private toastr: ToastrService, private router: Router) { }
 
   ngOnInit() {
     this.genres = Object.values(Genre);
@@ -45,7 +48,7 @@ export class MovieUploadComponent implements OnInit {
 
   onSubmit() {
     // Convert actors from comma separated string to array
-    this.movie.actors = this.movie.actors.toString().split(',').map(actor => actor.trim());
+    this.movie.actors = this.movie.actors.toString().toLowerCase().split(',').map(actor => actor.trim());
 
     // Convert selectedGenres from strings to Genre enum values
     this.updateMovieGenre();
@@ -118,6 +121,7 @@ export class MovieUploadComponent implements OnInit {
                  this.toastr.success('Movie uploaded successfully', 'Success', {
                     timeOut: 5000
                   });
+                 this.router.navigate(["/home"])
                 }, error => {
                   this.toastr.error('Error uploading', 'Error', {
                      timeOut: 5000
@@ -131,6 +135,8 @@ export class MovieUploadComponent implements OnInit {
               this.toastr.success('Movie uploaded successfully', 'Success', {
               timeOut: 5000
             });
+            this.router.navigate(["/home"])
+
             }, error => {
                console.log(error);
                this.toastr.error('Error uploading', 'Error', {

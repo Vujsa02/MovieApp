@@ -9,19 +9,25 @@ import { ToastrService } from 'ngx-toastr';
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmDeleteDialogComponent} from "../../dialogs/confirm-delete-dialog/confirm-delete-dialog.component";
 import {ReviewDialogComponent} from "../../dialogs/review-dialog/review-dialog.component";
+import {MovieCardComponent} from "../movie-card/movie-card.component";
+import {MatCard} from "@angular/material/card";
 @Component({
   selector: 'app-movie-details',
   standalone: true,
   imports: [
     NgIf,
     CommonModule,
-    NgOptimizedImage
+    NgOptimizedImage,
+    MovieCardComponent,
+    MatCard
   ],
   templateUrl: './movie-details.component.html',
   styleUrl: './movie-details.component.css'
 })
 export class MovieDetailsComponent {
   @Input() movie: Movie | undefined;
+  episodes: Movie[] = [];
+  currentEpisode: Movie | undefined;
   @ViewChild('videoPlayer') videoPlayer: ElementRef | undefined;
   constructor(private movieService: MovieService,
               private router: Router,
@@ -38,6 +44,25 @@ export class MovieDetailsComponent {
         next: (data: any)=>{
           this.movie = data[0];
           console.log(this.movie);
+          if (this.movie){
+            if(this.movie.fileName == ""){
+
+
+              this.movieService.getSeriesEpisodesById(this.movie.movieId).subscribe({
+                next: (data: any)=>{
+                  this.episodes = data.sort((a: any, b: any) => a.episodeNumber - b.episodeNumber);
+                  let minEpisode = this.episodes[0];
+                  for (let episode of this.episodes){
+                    if(episode.episodeNumber < minEpisode.episodeNumber){
+                      minEpisode = episode;
+                    }
+                  }
+                  this.currentEpisode = minEpisode;
+                }});
+
+
+            }
+          }
           this.cdr.detectChanges();
         },
       error: (err) => {
@@ -53,13 +78,27 @@ export class MovieDetailsComponent {
     return this.movie?.image ?  this.movie.image : environment.defaultImage;
   }
 
-   getRoundedDuration(): number {
-    return this.movie ? Math.ceil(Number(this.movie.duration)) : 0;
+   getRoundedDuration(movie:Movie): number {
+    return movie ? Math.ceil(Number(movie.duration)) : 1;
   }
 
   watchVideo() {
-    if (this.movie) {
-      this.movieService.getMovieStreamUrl(this.movie.movieId).subscribe({
+    if (this.currentEpisode) {
+      this.movieService.getMovieStreamUrl(this.currentEpisode.movieId).subscribe({
+        next: (data: any) => {
+          const videoUrl = data.presignedUrl; // Assuming the API returns the streaming URL
+          console.log(videoUrl)
+          if (this.videoPlayer && this.videoPlayer.nativeElement) {
+            this.videoPlayer.nativeElement.src = videoUrl;
+            this.videoPlayer.nativeElement.play();
+          }
+        },
+        error: (_) => {
+          console.log("Error fetching video stream URL!");
+        }
+      });
+    }else if(this.movie){
+      this.movieService.getMovieStreamUrl(this.movie!.movieId).subscribe({
         next: (data: any) => {
           const videoUrl = data.presignedUrl; // Assuming the API returns the streaming URL
           console.log(videoUrl)
@@ -97,7 +136,7 @@ export class MovieDetailsComponent {
   }
 
   updateMovie(){
-    this.router.navigate(["/update/" + this.movie!.movieId + "/" + this.movie!.createdAt])
+    this.router.navigate(["/update/movie/" + this.movie!.movieId + "/" + this.movie!.createdAt])
   }
   deleteMovie() {
     const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
@@ -134,10 +173,39 @@ export class MovieDetailsComponent {
       // Handle cancellation logic if needed
     } else {
       console.log('Dialog closed with result: ', result);
-      // Handle submission logic based on result (selectedOption)
+      let movie_param = []
+      movie_param.push(this.movie?.director)
+      let combinedArray = movie_param.concat(this.movie?.actors);
+      let movie_param2 = combinedArray.concat(this.movie?.genre)
+      let searchCriteria = {
+          rating: result,
+          movie_param: movie_param2
+          //Add params if necessary(also need to change lambda)
+        };
+      this.movieService.createMovieReview(searchCriteria).subscribe({
+        next: (data: any) => {
+          console.log(data);
+        }});
     }
     });
   }
 
+  openUploadEpisode(){
+    this.router.navigate([`/upload/episode/${this.movie?.movieId}/${this.movie?.createdAt}`])
+  }
+
+  onEpisodeChosen(episode: Movie) {
+    this.currentEpisode = episode;
+    this.watchVideo();
+  }
+
+  chooseEpisode(episode: Movie){
+    this.currentEpisode = episode;
+    this.watchVideo();
+  }
+
+  editEpisode(episode: Movie){
+    this.router.navigate([`update/episode/${episode?.movieId}/${episode?.createdAt}`])
+  }
   protected readonly open = open;
 }

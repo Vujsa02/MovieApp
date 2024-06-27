@@ -11,15 +11,17 @@ export interface Movie{
   createdAt: string;
   updatedAt: string;
   image: string;
+  episodeNumber: number;
+  seriesId: string;
 }
 
 export enum Genre{
-  ACTION= "Action",
-  SCIFI = "Sci-fi",
-  ROMANCE = "Romance",
-  HORROR = "Horror",
-  THRILLER = "Thriller",
-  DRAMA = "Drama",
-  COMEDY = "Comedy",
-  MYSTERY = "Mystery",
+  ACTION= "action",
+  SCIFI = "sci-fi",
+  ROMANCE = "romance",
+  HORROR = "horror",
+  THRILLER = "thriller",
+  DRAMA = "drama",
+  COMEDY = "comedy",
+  MYSTERY = "mystery",
 }

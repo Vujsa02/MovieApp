@@ -24,6 +24,8 @@ def lambda_handler(event, context):
         duration = body['duration']
         director = body['director']
         image = body['image']
+        episodeNumber = body['episodeNumber']
+        seriesId = body['seriesId']
 
         movie_id = event['pathParameters']['movieId']
         created_at = event['queryStringParameters'].get('createdAt')
@@ -32,7 +34,7 @@ def lambda_handler(event, context):
 
         s3_key = f"{movie_id}"
 
-        if body.get('content') is not None:
+        if body['content'] == "":
             presigned_url = ''
         else:
             presigned_url = s3.generate_presigned_url(
@@ -55,7 +57,9 @@ def lambda_handler(event, context):
             'director': director,
             's3Key': s3_key,
             'updatedAt': updated_at,
-            'image': image
+            'image': image,
+            'episodeNumber': episodeNumber,
+            'seriesId': seriesId
         }
 
         # Use put_item to replace the item

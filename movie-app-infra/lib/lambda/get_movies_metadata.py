@@ -1,7 +1,6 @@
 import boto3
 import os
 import json
-from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 movie_table = dynamodb.Table(os.environ['MOVIE_TABLE_NAME'])
@@ -19,8 +18,7 @@ def scan_table(table_name):
 
 def lambda_handler(event, context):
     try:
-        body = json.loads(event['body'])
-        username = body['username']
+        username = event['queryStringParameters']['username']
         movies = scan_table(movie_table)
         # get user feed
         response = feed_table.get_item(Key={'userId': username})
@@ -28,6 +26,9 @@ def lambda_handler(event, context):
             feed = response['Item']
         else:
             feed = {'userId': username}
+
+        feed.pop('userId', None)
+
         # sort feed by value
         sorted_feed = dict(sorted(feed.items(), key=lambda item: item[1], reverse=True))
         sorted_movies = []
@@ -35,6 +36,11 @@ def lambda_handler(event, context):
             for movie in movies:
                 if movie['movieId'] == sf:
                     sorted_movies.append(movie)
+
+        if sorted_movies is None:
+            sorted_movies = []
+        if len(sorted_movies) == 0:
+            sorted_movies = movies
 
         return {
             'statusCode': 200,

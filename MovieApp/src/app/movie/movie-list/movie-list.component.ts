@@ -44,21 +44,48 @@ export class MovieListComponent implements OnInit, OnDestroy {
   fetchMovies() {
     this.movieService.getMoviesMetadata().subscribe((movies) => {
       this.movies = movies;
+      this.filterEpisodes();
+
     });
   }
 
   searchMovies() {
-    // this.fetchMovies();
-    // this.filteredMovies = this.movies.filter(movie =>
-    //   (this.searchCriteria.title ? movie.title.toLowerCase().includes(this.searchCriteria.title.toLowerCase()) : true) &&
-    //   (this.searchCriteria.description ? movie.description.toLowerCase().includes(this.searchCriteria.description.toLowerCase()) : true) &&
-    //   (this.searchCriteria.actor ? movie.actors.some(actor => actor.toLowerCase().includes(this.searchCriteria.actor.toLowerCase())) : true) &&
-    //   (this.searchCriteria.director ? movie.director.toLowerCase().includes(this.searchCriteria.director.toLowerCase()) : true)
-    //   //(this.searchCriteria.genre ? movie.genre.toLowerCase().includes(this.searchCriteria.genre.toLowerCase()) : true)
-    // );
-    // this.movies = this.filteredMovies;
+    //this.criteriaToLowerCase()
     console.log(this.searchCriteria);
     this.movieService.searchMovies(this.searchCriteria).subscribe((filteredMovies) => {
-      this.movies = filteredMovies;})
+      this.movies = filteredMovies;
+      this.filterEpisodes();
+    })
+
+  }
+
+  filterEpisodes(){
+    let no_episodes_movies : Movie[] = []
+    for (let movie of this.movies){
+        if (movie.episodeNumber == 0){
+          no_episodes_movies.push(movie)
+        }
+    }
+    this.movies = no_episodes_movies
+  }
+
+  resetMovies(){
+    this.fetchMovies()
+  }
+
+  clearForm() {
+    this.searchCriteria.title = '';
+    this.searchCriteria.description = '';
+    this.searchCriteria.actors = '';
+    this.searchCriteria.director = '';
+    this.searchCriteria.genre = '';
+  }
+
+  criteriaToLowerCase(){
+    this.searchCriteria.title = this.searchCriteria.title.toLowerCase();
+    this.searchCriteria.description = this.searchCriteria.description.toLowerCase();
+    this.searchCriteria.actors = this.searchCriteria.actors.toLowerCase();
+    this.searchCriteria.director = this.searchCriteria.director.toLowerCase();
+    this.searchCriteria.genre = this.searchCriteria.genre.toLowerCase();
   }
 }

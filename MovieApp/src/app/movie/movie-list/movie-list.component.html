@@ -1,31 +1,36 @@
-<div class="movie-list">
-  <form (ngSubmit)="searchMovies()" #movieForm="ngForm">
-    <div>
-      <label for="title">Title:</label>
-      <input type="text" id="title" name="title" [(ngModel)]="searchCriteria.title">
-    </div>
-    <div>
-      <label for="description">Description:</label>
-      <input type="text" id="description" name="description" [(ngModel)]="searchCriteria.description">
-    </div>
-    <div>
-      <label for="actor">Actor:</label>
-      <input type="text" id="actor" name="actor" [(ngModel)]="searchCriteria.actors">
-    </div>
-    <div>
-      <label for="director">Director:</label>
-      <input type="text" id="director" name="director" [(ngModel)]="searchCriteria.director">
-    </div>
-    <div>
-      <label for="genre">Genre:</label>
-      <input type="text" id="genre" name="genre" [(ngModel)]="searchCriteria.genre">
-    </div>
-  </form>
+<div class="main-container">
+  <div class="search-view">
+    <form (ngSubmit)="searchMovies()" #movieForm="ngForm" class="form">
+      <div>
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" [(ngModel)]="searchCriteria.title">
+      </div>
+      <div>
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description" [(ngModel)]="searchCriteria.description">
+      </div>
+      <div>
+        <label for="actor">Actor:</label>
+        <input type="text" id="actor" name="actor" [(ngModel)]="searchCriteria.actors">
+      </div>
+      <div>
+        <label for="director">Director:</label>
+        <input type="text" id="director" name="director" [(ngModel)]="searchCriteria.director">
+      </div>
+      <div>
+        <label for="genre">Genre:</label>
+        <input type="text" id="genre" name="genre" [(ngModel)]="searchCriteria.genre">
+      </div>
+    </form>
+  </div>
 
+  <div class="button-container">
+    <button class="nav-item" (click)="searchMovies()">Search</button>
+    <button class="nav-item1" (click)="clearForm()">Clear</button>
+    <button class="nav-item2" (click)="resetMovies()">Reset</button>
+  </div>
 
-<button class="nav-item" (click)="searchMovies()">Search</button>
+  <div class="side-by-side">
+    <app-movie-card *ngFor="let movie of movies" [card]="movie"></app-movie-card>
+  </div>
 </div>
-<div class="side-by-side">
-  <app-movie-card *ngFor="let movie of movies" [card]="movie"></app-movie-card>
-</div>
-

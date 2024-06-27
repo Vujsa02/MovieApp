@@ -19,6 +19,7 @@ import {MaterialModule} from "./infrastructure/material/material.module";
 import {MatDialogModule} from "@angular/material/dialog";
 import {ConfirmDeleteDialogComponent} from "./dialogs/confirm-delete-dialog/confirm-delete-dialog.component";
 import {ReviewDialogComponent} from "./dialogs/review-dialog/review-dialog.component";
+import {MatIconModule} from "@angular/material/icon";
 
 
 @NgModule({
@@ -39,6 +40,7 @@ import {ReviewDialogComponent} from "./dialogs/review-dialog/review-dialog.compo
     HttpClientModule,
     MovieModule,
     MatDialogModule,
+    MatIconModule,
     MatButtonModule,
     ToastrModule.forRoot({
       timeOut: 3000, // Set the duration for toastr messages (milliseconds)

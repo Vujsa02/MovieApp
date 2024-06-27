@@ -30,12 +30,12 @@ def scan_table(table_name):
     return {'Items': items}
 
 
-def publish_to_sns(user_id):
-    sns.publish(
-        TopicArn=topic_arn,
-        Message=json.dumps({'userId': user_id}),
-        MessageStructure='string'
-    )
+# def publish_to_sns(user_id):
+#     sns.publish(
+#         TopicArn=topic_arn,
+#         Message=json.dumps({'userId': user_id}),
+#         MessageStructure='string'
+#     )
 
 
 def update_user_feed(user_id):
@@ -63,7 +63,7 @@ def update_user_feed(user_id):
     # Sort the feed by score
     feed = {k: v for k, v in sorted(feed.items(), key=lambda item: item[1], reverse=True)}
 
-    publish_to_sns(user_id)
+    # publish_to_sns(user_id)
 
     # Update user feed table
     user_feed_table.put_item(

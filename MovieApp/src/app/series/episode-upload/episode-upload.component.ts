@@ -1,23 +1,24 @@
-import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component} from '@angular/core';
 import {FormsModule} from "@angular/forms";
-import {NgForOf, NgIf} from "@angular/common";
-import {Genre, Movie} from "../movie-metadata.model";
-import {MovieService} from "../movie.service";
-import {ToastrService} from "ngx-toastr";
+import {MaterialModule} from "../../infrastructure/material/material.module";
+import {NgForOf} from "@angular/common";
+import {Genre, Movie} from "../../movie/movie-metadata.model";
+import {MovieService} from "../../movie/movie.service";
 import {ActivatedRoute, Router} from "@angular/router";
+import {ToastrService} from "ngx-toastr";
 
 @Component({
-  selector: 'app-movie-update',
+  selector: 'app-episode-upload',
   standalone: true,
-  imports: [
-    FormsModule,
-    NgForOf,
-    NgIf
-  ],
-  templateUrl: './movie-update.component.html',
-  styleUrl: './movie-update.component.css'
+    imports: [
+        FormsModule,
+        MaterialModule,
+        NgForOf
+    ],
+  templateUrl: './episode-upload.component.html',
+  styleUrl: './episode-upload.component.css'
 })
-export class MovieUpdateComponent implements OnInit {
+export class EpisodeUploadComponent {
   selectedFile: File | null = null; // Variable to store the selected file
   selectedImageFile: File | null = null; // Variable to store the selected image file
   selectedGenres: Genre[] = []; // Array to store selected genres as Genre enum values
@@ -39,7 +40,7 @@ export class MovieUpdateComponent implements OnInit {
     updatedAt: '',
     image: '',
     seriesId: '',
-    episodeNumber: 0
+    episodeNumber: 1
   };
 
   constructor(private movieService: MovieService,
@@ -58,7 +59,7 @@ export class MovieUpdateComponent implements OnInit {
       this.movieService.getMoviesMetadataById(movieId, createdAt).subscribe({
         next: (data: any) => {
           this.movie = data[0];
-          console.log(this.movie);
+          this.setUploadFields();
           this.formattedDuration = this.formatDuration(this.movie.duration);
           this.setGenreSelections();
           this.cdr.detectChanges();
@@ -71,15 +72,23 @@ export class MovieUpdateComponent implements OnInit {
     });
   }
 
+  setUploadFields(){
+    this.movie.seriesId = this.movie.movieId
+    this.movie.movieId = ""
+    this.movie.title = ""
+    this.movie.description = ""
+    this.movie.episodeNumber= 1
+  }
+
   onSubmit() {
     // Convert actors from comma separated string to array
-    this.movie.actors = this.movie.actors.toString().toLowerCase().split(',').map(actor => actor.trim());
+    this.movie.actors = this.movie.actors.toString().split(',').map(actor => actor.trim());
 
     // Convert selectedGenres from strings to Genre enum values
     this.updateMovieGenre();
 
     // Call service to upload movie metadata
-    this.sendUpdateRequest();
+    this.sendUploadRequest();
   }
 
   onFileSelected(event: Event) {
@@ -94,15 +103,6 @@ export class MovieUpdateComponent implements OnInit {
         this.formattedDuration = this.formatDuration(duration);
         console.log(`Selected file: ${file.name}, Duration: ${duration} seconds`);
       });
-    }
-  }
-
-  onImageFileSelected(event: Event) {
-    const fileInput = event.target as HTMLInputElement;
-    const file = fileInput.files && fileInput.files[0];
-    if (file) {
-      this.selectedImageFile = file;
-      console.log(`Selected image file: ${file.name}`);
     }
   }
 
@@ -125,99 +125,42 @@ export class MovieUpdateComponent implements OnInit {
     });
   }
 
-  sendUpdateRequest() {
-    if (this.selectedFile && this.selectedGenres.length > 0) {
-      // convert movie to base64
-      const movieReader = new FileReader();
-      movieReader.readAsDataURL(this.selectedFile);
-      movieReader.onload = () => {
-        const movieContent = movieReader.result as string;
-
-        if (this.selectedImageFile) {
-          const imageReader = new FileReader();
-          imageReader.readAsDataURL(this.selectedImageFile!);
-          imageReader.onload = () => {
-            const imageContent = imageReader.result as string;
-
-            if (movieContent && imageContent) {
-              this.movie.image = imageContent; // Set the base64 string of the image to movie.image
-              this.movieService.updateMovie(this.movie, movieContent)
-                .subscribe(() => {
-                  this.toastr.success('Movie/series updated successfully', 'Success', {
-                      timeOut: 5000
-                    });
-                  this.router.navigate(["/home"]);
-                }, error => {
-                  console.log(error);
-                  this.toastr.error('Error updating', 'Error', {
-                     timeOut: 5000
-                   });
-                });
-            }
-          };
-        } else {
-          this.movieService.updateMovie(this.movie, movieContent)
-            .subscribe(() => {
-              this.toastr.success('Movie/series updated successfully', 'Success', {
-                  timeOut: 5000
-                });
-                this.router.navigate(["/home"])
-
-            }, error => {
-              console.log(error);
-              this.toastr.error('Error updating', 'Error', {
-                   timeOut: 5000
-                 });
-
+  sendUploadRequest() {
+  if (this.selectedFile) {
+    // convert movie to base64
+    const movieReader = new FileReader();
+    movieReader.readAsDataURL(this.selectedFile);
+    movieReader.onload = () => {
+      const movieContent = movieReader.result as string;
+      if (movieContent) {
+        this.movieService.uploadMovie(this.movie, movieContent).subscribe(
+          () => {
+            this.toastr.success('Episode uploaded successfully', 'Success', {
+              timeOut: 5000,
             });
-        }
-      };
-    } else {
-      if(this.selectedGenres.length > 0) {
-        if (this.selectedImageFile) {
-          const imageReader = new FileReader();
-          imageReader.readAsDataURL(this.selectedImageFile!);
-          imageReader.onload = () => {
-            const imageContent = imageReader.result as string;
-
-            if (imageContent) {
-              this.movie.image = imageContent;
-              this.movieService.updateMovie(this.movie, '')
-                .subscribe(() => {
-                  this.toastr.success('Movie/series updated successfully', 'Success', {
-                      timeOut: 5000
-                    });
-                  this.router.navigate(["/home"])
-                }, error => {
-                  console.log(error);
-                  this.toastr.error('Error updating', 'Error', {
-                     timeOut: 5000
-                   });
-                });
+            this.router.navigate(['/home']);
+          },
+          (error) => {
+            if (error.status === 400) {
+              this.toastr.error('Invalid episode number', 'Error', {
+                timeOut: 5000,
+              });
+            } else {
+              this.toastr.error('Error uploading', 'Error', {
+                timeOut: 5000,
+              });
             }
-          };
-        } else {
-          this.movieService.updateMovie(this.movie, '')
-            .subscribe(() => {
-              this.toastr.success('Movie/series updated successfully', 'Success', {
-                  timeOut: 5000
-                });
-              this.router.navigate(["/home"])
-            }, error => {
-              console.log(error);
-              this.toastr.error('Error updating', 'Error', {
-                   timeOut: 5000
-                 });
-
-            });
-        }
-      }else{
-        this.toastr.error('Invalid form', 'Error', {
-           timeOut: 5000
-         });
+          }
+        );
       }
-    }
+    };
+  } else {
+    this.toastr.error('Invalid form', 'Error', {
+      timeOut: 5000,
+    });
   }
+}
+
 
   // Function to update movie.genre from selectedGenres array
   updateMovieGenre() {
@@ -246,18 +189,16 @@ export class MovieUpdateComponent implements OnInit {
     return num < 10 ? '0' + num : num.toString();
   }
 
-   setGenreSelections() {
+  setGenreSelections() {
     const genreCheckboxes = document.querySelectorAll('input[type="checkbox"][name="genre"]');
     genreCheckboxes.forEach(checkbox => {
       const genre = (checkbox as HTMLInputElement).value;
       const genreValue = Object.values(Genre).find(g => g === genre);
-      if(this.movie.genre.includes(genreValue!)){
+      if (this.movie.genre.includes(genreValue!)) {
         (checkbox as HTMLInputElement).checked = true;
         this.selectedGenres.push(genreValue!);
-        }
+      }
 
     });
   }
-
-
 }

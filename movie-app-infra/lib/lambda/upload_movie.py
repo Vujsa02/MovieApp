@@ -1,20 +1,25 @@
-import boto3
 import json
 import os
 import uuid
 from datetime import datetime
 
+import boto3
+
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
+
 movie_bucket = os.environ['MOVIE_BUCKET_NAME']
-movie_table = os.environ['MOVIE_TABLE_NAME']
-genres_table = dynamodb.Table(os.environ['GENRES_TABLE_NAME'])
-actors_table = dynamodb.Table(os.environ['ACTORS_TABLE_NAME'])
-subscription_table = os.environ['SUBSCRIPTION_TABLE_NAME']
-table = dynamodb.Table(movie_table)
-subscription_table = dynamodb.Table(subscription_table)
-sqs = boto3.client('sqs')
+movie_table_name = os.environ['MOVIE_TABLE_NAME']
+genres_table_name = os.environ['GENRES_TABLE_NAME']
+actors_table_name = os.environ['ACTORS_TABLE_NAME']
+subscription_table_name = os.environ['SUBSCRIPTION_TABLE_NAME']
 email_queue_url = os.environ['EMAIL_QUEUE_URL']
+
+table = dynamodb.Table(movie_table_name)
+genres_table = dynamodb.Table(genres_table_name)
+actors_table = dynamodb.Table(actors_table_name)
+subscription_table = dynamodb.Table(subscription_table_name)
+sqs = boto3.client('sqs')
 
 def lambda_handler(event, context):
     try:
@@ -28,6 +33,35 @@ def lambda_handler(event, context):
         duration = body['duration']
         director = body['director']
         image = body['image']
+        episodeNumber = body['episodeNumber']
+        seriesId = body['seriesId']
+        print('SeriesId:', seriesId)
+        print('EpisodeNumber:', episodeNumber)
+
+        if episodeNumber != '0':
+            response = table.query(
+                IndexName='SeriesIdIndex',  # Use the existing GSI named 'SeriesIdIndex'
+                KeyConditionExpression='seriesId = :seriesId',
+                ExpressionAttributeValues={
+                    ':seriesId': seriesId
+                }
+            )
+
+            print('Response:', response['Items'])
+
+            # Check if any item has the same episodeNumber
+            for item in response['Items']:
+                if item['episodeNumber'] == episodeNumber:
+                    print("JEBAC KEVEEEEE")
+                    return {
+                        'statusCode': 400,
+                        'headers': {
+                            'Access-Control-Allow-Headers': 'Content-Type',
+                            'Access-Control-Allow-Origin': '*',
+                            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                        },
+                        'body': json.dumps({'error': 'Item with the same seriesId and episodeNumber already exists'})
+                    }
 
         movie_id = str(uuid.uuid4())
         created_at = datetime.utcnow().isoformat()
@@ -35,12 +69,14 @@ def lambda_handler(event, context):
 
         s3_key = f"{movie_id}"
 
-        # Generate presigned URL for uploading the file to S3
-        presigned_url = s3.generate_presigned_url(
-            'put_object',
-            Params={'Bucket': movie_bucket, 'Key': s3_key},
-            ExpiresIn=3600  # URL expiry time in seconds
-        )
+        if body['content']:
+            presigned_url = s3.generate_presigned_url(
+                'put_object',
+                Params={'Bucket': movie_bucket, 'Key': s3_key},
+                ExpiresIn=3600
+            )
+        else:
+            presigned_url = ''
 
         db_params = {
             'movieId': movie_id,
@@ -55,7 +91,9 @@ def lambda_handler(event, context):
             's3Key': s3_key,
             'createdAt': created_at,
             'updatedAt': updated_at,
-            'image': image
+            'image': image,
+            'episodeNumber': episodeNumber,
+            'seriesId': seriesId
         }
 
         # Save movie metadata to DynamoDB
@@ -65,7 +103,7 @@ def lambda_handler(event, context):
             genres_table.put_item(Item={
                 'movieId': movie_id,
                 'genre': genr,
-                'createdAt':created_at
+                'createdAt': created_at
             })
 
         for actor in actors:
@@ -83,9 +121,8 @@ def lambda_handler(event, context):
         match_list = actors + [director] + genre
         for subscription in subscriptions:
             # Check if any of the subscriptions match the movie metadata
-            if any(sub in match_list for sub in subscription['subscriptions']):
+            if any(sub in match_list for sub in subscription.get('subscriptions', [])):
                 # Send an email to the user
-                print(image)
                 message = {
                     'email': subscription['email'],
                     'subject': f"New Movie: {title}",

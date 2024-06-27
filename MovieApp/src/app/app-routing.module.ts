@@ -8,6 +8,9 @@ import {MovieDetailsComponent} from "./movie/movie-details/movie-details.compone
 import {MovieUploadComponent} from "./movie/movie-upload/movie-upload.component";
 import {SubscribeComponent} from "./sub/subscribe/subscribe.component";
 import {MovieUpdateComponent} from "./movie/movie-update/movie-update.component";
+import {SeriesUploadComponent} from "./series/series-upload/series-upload.component";
+import {EpisodeUploadComponent} from "./series/episode-upload/episode-upload.component";
+import {EpisodeUpdateComponent} from "./series/episode-update/episode-update.component";
 
 const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -15,9 +18,13 @@ const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { path: 'login', component: LoginComponent },
   { path: 'details/:movieId/:createdAt', component:MovieDetailsComponent },
-  { path: 'upload', component:MovieUploadComponent },
+  { path: 'upload/movies', component:MovieUploadComponent },
   { path: 'subscribe', component:SubscribeComponent, canActivate:[AuthGuard] },
-  { path: 'update/:movieId/:createdAt', component:MovieUpdateComponent }
+  { path: 'update/movie/:movieId/:createdAt', component:MovieUpdateComponent },
+  { path: 'upload/series' , component:SeriesUploadComponent},
+  { path: 'upload/episode/:movieId/:createdAt' , component:EpisodeUploadComponent},
+  { path: 'update/episode/:movieId/:createdAt', component:EpisodeUpdateComponent },
+
   ];
 @NgModule({
   imports: [RouterModule.forRoot(routes)],

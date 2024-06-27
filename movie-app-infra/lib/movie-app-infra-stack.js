@@ -60,6 +60,12 @@ class MovieAppInfraStack extends cdk.Stack {
     });
 
     movieTable.addGlobalSecondaryIndex({
+      indexName: 'SeriesIdIndex',
+      partitionKey: { name: 'seriesId', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    movieTable.addGlobalSecondaryIndex({
           indexName: 'DirectorIndex',
           partitionKey: { name: 'director', type: dynamodb.AttributeType.STRING },
           projectionType: dynamodb.ProjectionType.ALL,
@@ -68,6 +74,32 @@ class MovieAppInfraStack extends cdk.Stack {
     movieTable.addGlobalSecondaryIndex({
       indexName: 'DescriptionIndex',
       partitionKey: { name: 'description', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    const genresTable = new dynamodb.Table(this, 'GenresTable', {
+    partitionKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
+    sortKey: { name: 'genre', type: dynamodb.AttributeType.STRING },
+    removalPolicy: cdk.RemovalPolicy.DESTROY,
+    tableName: 'mmm-genres-table',
+  });
+
+  const actorsTable = new dynamodb.Table(this, 'ActorsTable', {
+    partitionKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
+    sortKey: { name: 'actor', type: dynamodb.AttributeType.STRING },
+    removalPolicy: cdk.RemovalPolicy.DESTROY,
+    tableName: 'mmm-actors-table',
+  });
+
+  actorsTable.addGlobalSecondaryIndex({
+      indexName: 'actor-index',
+      partitionKey: { name: 'actor', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+  genresTable.addGlobalSecondaryIndex({
+      indexName: 'genre-index',
+      partitionKey: { name: 'genre', type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
@@ -186,6 +218,8 @@ class MovieAppInfraStack extends cdk.Stack {
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
         MOVIE_TABLE_NAME: movieTable.tableName,
+        GENRES_TABLE_NAME: genresTable.tableName,
+        ACTORS_TABLE_NAME: actorsTable.tableName,
         SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
         EMAIL_QUEUE_URL: emailQueue.queueUrl,
       },
@@ -193,6 +227,16 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieBucket.grantPut(uploadMovieLambda);
     movieTable.grantWriteData(uploadMovieLambda);
+    genresTable.grantWriteData(uploadMovieLambda);
+    actorsTable.grantWriteData(uploadMovieLambda);
+
+    // Add policy to allow dynamodb:Query action
+    uploadMovieLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['dynamodb:Query'],
+      resources: [
+        `${movieTable.tableArn}/index/SeriesIdIndex`
+      ]
+    }));
 
     const updateMovieLambda = new lambda.Function(this, 'UpdateMovieFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -222,6 +266,32 @@ class MovieAppInfraStack extends cdk.Stack {
 
     movieBucket.grantRead(downloadMovieLambda);
 
+    const queryMoviesBySeriesIdLambda = new lambda.Function(this, 'QueryMoviesBySeriesIdFunction', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'get_all_episodes.lambda_handler',
+      environment: {
+        MOVIE_TABLE_NAME: movieTable.tableName,
+      },
+    });
+
+    // Grant DynamoDB read permissions to the Lambda function
+    movieTable.grantReadData(queryMoviesBySeriesIdLambda);
+
+
+    const episodesMoviesPolicy = new PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['dynamodb:Query'],
+      resources: [
+        movieTable.tableArn,
+        `${movieTable.tableArn}/index/SeriesIdIndex`,
+      ],
+    });
+
+    queryMoviesBySeriesIdLambda.addToRolePolicy(episodesMoviesPolicy);
+
+
+
     // Get movies metadata Lambda function
     const getMoviesMetadataLambda = new lambda.Function(this, 'GetMoviesMetadataFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -234,6 +304,7 @@ class MovieAppInfraStack extends cdk.Stack {
     });
 
     movieTable.grantReadData(getMoviesMetadataLambda);
+    userFeedTable.grantReadData(getMoviesMetadataLambda);
 
     const getMovieMetadataByIdLambda = new lambda.Function(this, 'GetMovieMetadataByIdFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -277,21 +348,28 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'search_movies.lambda_handler',
       environment: {
         MOVIE_TABLE_NAME: movieTable.tableName,
+        GENRES_TABLE_NAME: genresTable.tableName,
+        ACTORS_TABLE_NAME: actorsTable.tableName,
       },
     });
 
     movieTable.grantReadData(queryMoviesLambda);
+    genresTable.grantReadData(queryMoviesLambda);
+    actorsTable.grantReadData(queryMoviesLambda);
 
-    const queryMoviesPolicy = new iam.PolicyStatement({
+    const queryMoviesPolicy = new PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: ['dynamodb:Query'],
       resources: [
         movieTable.tableArn,
         `${movieTable.tableArn}/index/TitleIndex`,
         `${movieTable.tableArn}/index/DirectorIndex`,
-        `${movieTable.tableArn}/index/GenreIndex`,
-        `${movieTable.tableArn}/index/ActorsIndex`,
         `${movieTable.tableArn}/index/DescriptionIndex`,
+        genresTable.tableArn,
+        actorsTable.tableArn,
+         `${actorsTable.tableArn}/index/actor-index`,
+        `${genresTable.tableArn}/index/genre-index`,
+        `${movieTable.tableArn}/index/SeriesIdIndex`// Add actor-index here
       ],
     });
 
@@ -393,50 +471,6 @@ class MovieAppInfraStack extends cdk.Stack {
     }));
 
 
-    // Create WebSocket API
-    const webSocketApi = new WebSocketApi(this, 'MovieWebSocketApi', {
-      apiName: 'MovieWebSocketApi',
-    });
-
-    // Create WebSocket Stage
-    new WebSocketStage(this, 'MovieWebSocketStage', {
-      webSocketApi,
-      stageName: 'dev',
-      autoDeploy: true,
-    });
-
-    // Create WebSocket Lambda function
-    const webSocketHandler = new lambda.Function(this, 'WebSocketHandler', {
-      runtime: lambda.Runtime.PYTHON_3_9,
-      handler: 'websocket.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, 'lambda')),
-      environment: {
-        USER_FEED_TABLE_NAME: userFeedTable.tableName,
-      },
-    });
-
-    // Allow Lambda to publish to SNS
-    webSocketHandler.addToRolePolicy(new PolicyStatement({
-      actions: ['sns:Publish'],
-      resources: [topic.topicArn],
-    }));
-
-    // Subscribe Lambda function to SNS topic
-    topic.addSubscription(new subscriptions.LambdaSubscription(webSocketHandler));
-
-    // Define WebSocket integration for Lambda
-    const integration = new WebSocketLambdaIntegration('WebSocketIntegration', webSocketHandler);
-
-    // Add WebSocket route
-    webSocketApi.addRoute('sendmessage', {
-      integration,
-    });
-
-    // Output WebSocket API endpoint URL
-    new cdk.CfnOutput(this, 'WebSocketApiUrl', {
-      value: webSocketApi.apiEndpoint,
-    });
-
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'MovieApi', {
@@ -467,6 +501,10 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const subscribeResource = api.root.addResource('subscribe');
     subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
+
+    const seriesResource = api.root.addResource('episodes');
+    const episodesByIdResource = seriesResource.addResource('{seriesId}');
+    episodesByIdResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesBySeriesIdLambda));
 
 
 
