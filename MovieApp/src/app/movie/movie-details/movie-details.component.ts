@@ -9,26 +9,32 @@ import { ToastrService } from 'ngx-toastr';
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmDeleteDialogComponent} from "../../dialogs/confirm-delete-dialog/confirm-delete-dialog.component";
 import {ReviewDialogComponent} from "../../dialogs/review-dialog/review-dialog.component";
+import {MovieCardComponent} from "../movie-card/movie-card.component";
+import {MatCard} from "@angular/material/card";
 @Component({
   selector: 'app-movie-details',
   standalone: true,
   imports: [
     NgIf,
     CommonModule,
-    NgOptimizedImage
+    NgOptimizedImage,
+    MovieCardComponent,
+    MatCard
   ],
   templateUrl: './movie-details.component.html',
   styleUrl: './movie-details.component.css'
 })
 export class MovieDetailsComponent {
   @Input() movie: Movie | undefined;
+  episodes: Movie[] = [];
+  episodeId: string = "";
+  currentEpisode: Movie | undefined;
   @ViewChild('videoPlayer') videoPlayer: ElementRef | undefined;
   constructor(private movieService: MovieService,
               private router: Router,
               private route: ActivatedRoute,
               private cdr: ChangeDetectorRef,
               private toastr: ToastrService,
-              private episodes: [],
               public dialog: MatDialog) {}
 
   ngOnInit() {
@@ -41,10 +47,21 @@ export class MovieDetailsComponent {
           console.log(this.movie);
           if (this.movie){
             if(this.movie.fileName == ""){
+
+
               this.movieService.getSeriesEpisodesById(this.movie.movieId).subscribe({
-                      next: (data: any)=>{
-                        this.episodes = data;
-                      }});
+                next: (data: any)=>{
+                  this.episodes = data.sort((a: any, b: any) => a.episodeNumber - b.episodeNumber);
+                  let minEpisode = this.episodes[0];
+                  for (let episode of this.episodes){
+                    if(episode.episodeNumber < minEpisode.episodeNumber){
+                      minEpisode = episode;
+                    }
+                  }
+                  this.currentEpisode = minEpisode;
+                }});
+
+
             }
           }
           this.cdr.detectChanges();
@@ -67,8 +84,22 @@ export class MovieDetailsComponent {
   }
 
   watchVideo() {
-    if (this.movie) {
-      this.movieService.getMovieStreamUrl(this.movie.movieId).subscribe({
+    if (this.currentEpisode) {
+      this.movieService.getMovieStreamUrl(this.currentEpisode.movieId).subscribe({
+        next: (data: any) => {
+          const videoUrl = data.presignedUrl; // Assuming the API returns the streaming URL
+          console.log(videoUrl)
+          if (this.videoPlayer && this.videoPlayer.nativeElement) {
+            this.videoPlayer.nativeElement.src = videoUrl;
+            this.videoPlayer.nativeElement.play();
+          }
+        },
+        error: (_) => {
+          console.log("Error fetching video stream URL!");
+        }
+      });
+    }else if(this.movie){
+      this.movieService.getMovieStreamUrl(this.movie!.movieId).subscribe({
         next: (data: any) => {
           const videoUrl = data.presignedUrl; // Assuming the API returns the streaming URL
           console.log(videoUrl)
@@ -136,6 +167,20 @@ export class MovieDetailsComponent {
       // Handle submission logic based on result (selectedOption)
     }
     });
+  }
+
+  openUploadEpisode(){
+    this.router.navigate([`/upload/episode/${this.movie?.movieId}/${this.movie?.createdAt}`])
+  }
+
+  onEpisodeChosen(episode: Movie) {
+    this.currentEpisode = episode;
+    this.watchVideo();
+  }
+
+  chooseEpisode(episode: Movie){
+    this.currentEpisode = episode;
+    this.watchVideo();
   }
 
   protected readonly open = open;

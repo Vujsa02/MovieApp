@@ -34,7 +34,7 @@ def lambda_handler(event, context):
 
         s3_key = f"{movie_id}"
 
-        if body.get('content') is not None:
+        if body['content'] == "":
             presigned_url = ''
         else:
             presigned_url = s3.generate_presigned_url(
