@@ -129,5 +129,9 @@ export class MovieDetailsComponent {
     });
   }
 
+  openUploadEpisode(){
+    this.router.navigate([`/upload/episode/${this.movie?.movieId}/${this.movie?.createdAt}`])
+  }
+
   protected readonly open = open;
 }

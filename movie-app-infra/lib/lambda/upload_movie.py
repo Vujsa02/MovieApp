@@ -38,11 +38,14 @@ def lambda_handler(event, context):
         s3_key = f"{movie_id}"
 
         # Generate presigned URL for uploading the file to S3
-        presigned_url = s3.generate_presigned_url(
-            'put_object',
-            Params={'Bucket': movie_bucket, 'Key': s3_key},
-            ExpiresIn=3600  # URL expiry time in seconds
-        )
+        if body.get('content') is not None:
+            presigned_url = ''
+        else:
+            presigned_url = s3.generate_presigned_url(
+                'put_object',
+                Params={'Bucket': movie_bucket, 'Key': s3_key},
+                ExpiresIn=3600
+            )
 
         db_params = {
             'movieId': movie_id,

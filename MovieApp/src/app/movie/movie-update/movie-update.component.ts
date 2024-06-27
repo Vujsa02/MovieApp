@@ -38,7 +38,7 @@ export class MovieUpdateComponent implements OnInit {
     updatedAt: '',
     image: '',
     seriesId: '',
-    episodeNumber: -1
+    episodeNumber: 0
   };
 
   constructor(private movieService: MovieService,
