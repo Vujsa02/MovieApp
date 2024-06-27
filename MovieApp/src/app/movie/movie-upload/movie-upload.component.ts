@@ -35,6 +35,8 @@ export class MovieUploadComponent implements OnInit {
     createdAt: '',
     updatedAt: '',
     image: '',
+    episodeNumber: -1,
+    seriesId: ''
   };
 
   constructor(private movieService: MovieService, private toastr: ToastrService) { }

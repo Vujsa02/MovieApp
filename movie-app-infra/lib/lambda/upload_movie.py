@@ -28,6 +28,8 @@ def lambda_handler(event, context):
         duration = body['duration']
         director = body['director']
         image = body['image']
+        episodeNumber = body['episodeNumber']
+        seriesId = body['seriesId']
 
         movie_id = str(uuid.uuid4())
         created_at = datetime.utcnow().isoformat()
@@ -55,7 +57,9 @@ def lambda_handler(event, context):
             's3Key': s3_key,
             'createdAt': created_at,
             'updatedAt': updated_at,
-            'image': image
+            'image': image,
+            'episodeNumber': episodeNumber,
+            'seriesId': seriesId
         }
 
         # Save movie metadata to DynamoDB

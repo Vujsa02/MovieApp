@@ -11,6 +11,8 @@ export interface Movie{
   createdAt: string;
   updatedAt: string;
   image: string;
+  episodeNumber: number;
+  seriesId: string;
 }
 
 export enum Genre{
