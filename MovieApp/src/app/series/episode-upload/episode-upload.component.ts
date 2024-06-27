@@ -126,34 +126,41 @@ export class EpisodeUploadComponent {
   }
 
   sendUploadRequest() {
-    if (this.selectedFile) {
-      // convert movie to base64
-      const movieReader = new FileReader();
-      movieReader.readAsDataURL(this.selectedFile);
-      movieReader.onload = () => {
-        const movieContent = movieReader.result as string;
-        if (movieContent ) {
-
-          this.movieService.uploadMovie(this.movie, movieContent)
-            .subscribe(() => {
-             this.toastr.success('Episode uploaded successfully', 'Success', {
-                timeOut: 5000
-              });
-             this.router.navigate(["/home"])
-            }, error => {
-              this.toastr.error('Error uploading', 'Error', {
-                 timeOut: 5000
-               });
+  if (this.selectedFile) {
+    // convert movie to base64
+    const movieReader = new FileReader();
+    movieReader.readAsDataURL(this.selectedFile);
+    movieReader.onload = () => {
+      const movieContent = movieReader.result as string;
+      if (movieContent) {
+        this.movieService.uploadMovie(this.movie, movieContent).subscribe(
+          () => {
+            this.toastr.success('Episode uploaded successfully', 'Success', {
+              timeOut: 5000,
             });
-        }
-
-      };
-    }else{
-       this.toastr.error('Invalid form', 'Error', {
-       timeOut: 5000
-       });
-    }
+            this.router.navigate(['/home']);
+          },
+          (error) => {
+            if (error.status === 400) {
+              this.toastr.error('Invalid episode number', 'Error', {
+                timeOut: 5000,
+              });
+            } else {
+              this.toastr.error('Error uploading', 'Error', {
+                timeOut: 5000,
+              });
+            }
+          }
+        );
+      }
+    };
+  } else {
+    this.toastr.error('Invalid form', 'Error', {
+      timeOut: 5000,
+    });
   }
+}
+
 
   // Function to update movie.genre from selectedGenres array
   updateMovieGenre() {

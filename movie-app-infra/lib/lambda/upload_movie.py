@@ -31,6 +31,28 @@ def lambda_handler(event, context):
         episodeNumber = body['episodeNumber']
         seriesId = body['seriesId']
 
+        response = table.query(
+            IndexName='seriesIdIndex',  # Use the existing GSI named 'seriesIdIndex'
+            KeyConditionExpression='seriesId = :seriesId',
+            ExpressionAttributeValues={
+                ':seriesId': seriesId
+            }
+        )
+
+        # Check if any item has the same episodeNumber
+        for item in response['Items']:
+            if item['episodeNumber'] == episodeNumber:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                    },
+                    'body': json.dumps({'error': 'Item with the same seriesId and episodeNumber already exists'})
+                }
+
+
         movie_id = str(uuid.uuid4())
         created_at = datetime.utcnow().isoformat()
         updated_at = created_at

@@ -130,10 +130,16 @@ export class EpisodeUpdateComponent {
                 });
               this.router.navigate(["/home"]);
             }, error => {
-              console.log(error);
+              if (error.status === 400) {
+              this.toastr.error('Invalid episode number', 'Error', {
+                timeOut: 5000,
+              });
+            }else{
+                console.log(error);
               this.toastr.error('Error updating', 'Error', {
                  timeOut: 5000
                });
+              }
             });
         }
       };
@@ -145,12 +151,16 @@ export class EpisodeUpdateComponent {
               });
             this.router.navigate(["/home"]);
           }, error => {
-            console.log(error);
-            this.toastr.error('Error updating', 'Error', {
+            if (error.status === 400) {
+              this.toastr.error('Invalid episode number', 'Error', {
+                timeOut: 5000,
+              });
+            }else{
+               this.toastr.error('Error updating', 'Error', {
                timeOut: 5000
-             });
+                });
+            }
           });
-
     }
   }
 

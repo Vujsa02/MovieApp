@@ -349,7 +349,8 @@ class MovieAppInfraStack extends cdk.Stack {
         genresTable.tableArn,
         actorsTable.tableArn,
          `${actorsTable.tableArn}/index/actor-index`,
-        `${genresTable.tableArn}/index/genre-index`// Add actor-index here
+        `${genresTable.tableArn}/index/genre-index`,
+        `${movieTable.tableArn}/index/SeriesIdIndex`// Add actor-index here
       ],
     });
 
