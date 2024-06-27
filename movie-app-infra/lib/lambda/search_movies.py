@@ -39,14 +39,49 @@ def query_dynamodb(title=None, director=None, genre=None, actors=None, descripti
 
     if not key_condition_expression and not filter_expressions:
         if genre:
-            items = query_movies_by_genre(genre)
+            split_genre = genre.split(',')
+            split_genre = [element.strip() for element in split_genre]
+            items = []
+            no_spam = []
+            if len(split_genre) > 1:
+                items = query_movies_by_genre(split_genre[0])
+                no_spam.append(split_genre[0])
+                for one_genre in split_genre:
+                    if one_genre not in no_spam:
+                        items1 = query_movies_by_genre(one_genre)
+                        movieIds1 = {item['movieId'] for item in items1}
+                        movieIds = {item['movieId'] for item in items}
+                        intersection_movieIds = movieIds1 & movieIds
+                        intersection = [item for item in items1 if item['movieId'] in intersection_movieIds]
+                        intersection += [item for item in items if item['movieId'] in intersection_movieIds and item not in intersection]
+                        items = intersection
+            else:
+                items = query_movies_by_genre(split_genre[0])
             if actors:
-                items = [item for item in items if actors in item['actors']]
+                result = actors.split(',')
+                result = [element.strip() for element in result]
+                for r in result:
+                    items = [item for item in items if r in item['actors']]
             return items
         elif actors:
-            items = query_movies_by_actor(actors)
-            if genre:
-                items = [item for item in items if genre in item['genre']]
+            split_actors = actors.split(',')
+            split_actors = [element.strip() for element in split_actors]
+            items = []
+            no_spam = []
+            if len(split_actors) > 1:
+                items = query_movies_by_actor(split_actors[0])
+                no_spam.append(split_actors[0])
+                for one_genre in split_actors:
+                    if one_genre not in no_spam:
+                        items1 = query_movies_by_actor(one_genre)
+                        movieIds1 = {item['movieId'] for item in items1}
+                        movieIds = {item['movieId'] for item in items}
+                        intersection_movieIds = movieIds1 & movieIds
+                        intersection = [item for item in items1 if item['movieId'] in intersection_movieIds]
+                        intersection += [item for item in items if item['movieId'] in intersection_movieIds and item not in intersection]
+                        items = intersection
+            else:
+                items = query_movies_by_actor(split_actors[0])
             return items
         raise ValueError("At least one search criteria must be provided.")
 
@@ -61,9 +96,15 @@ def query_dynamodb(title=None, director=None, genre=None, actors=None, descripti
     response = table.query(**params)
     items = response['Items']
     if genre:
-        items = [item for item in items if genre in item['genre']]
+        result = genre.split(',')
+        result = [element.strip() for element in result]
+        for r in result:
+            items = [item for item in items if r in item['genre']]
     if actors:
-        items = [item for item in items if actors in item['actors']]
+        result = actors.split(',')
+        result = [element.strip() for element in result]
+        for r in result:
+            items = [item for item in items if r in item['actors']]
     return items
 
 def query_movies_by_genre(genre):

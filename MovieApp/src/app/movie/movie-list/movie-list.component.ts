@@ -33,15 +33,7 @@ export class MovieListComponent implements OnInit {
   }
 
   searchMovies() {
-    // this.fetchMovies();
-    // this.filteredMovies = this.movies.filter(movie =>
-    //   (this.searchCriteria.title ? movie.title.toLowerCase().includes(this.searchCriteria.title.toLowerCase()) : true) &&
-    //   (this.searchCriteria.description ? movie.description.toLowerCase().includes(this.searchCriteria.description.toLowerCase()) : true) &&
-    //   (this.searchCriteria.actor ? movie.actors.some(actor => actor.toLowerCase().includes(this.searchCriteria.actor.toLowerCase())) : true) &&
-    //   (this.searchCriteria.director ? movie.director.toLowerCase().includes(this.searchCriteria.director.toLowerCase()) : true)
-    //   //(this.searchCriteria.genre ? movie.genre.toLowerCase().includes(this.searchCriteria.genre.toLowerCase()) : true)
-    // );
-    // this.movies = this.filteredMovies;
+    //this.criteriaToLowerCase()
     console.log(this.searchCriteria);
     this.movieService.searchMovies(this.searchCriteria).subscribe((filteredMovies) => {
       this.movies = filteredMovies;})
@@ -57,5 +49,13 @@ export class MovieListComponent implements OnInit {
     this.searchCriteria.actors = '';
     this.searchCriteria.director = '';
     this.searchCriteria.genre = '';
+  }
+
+  criteriaToLowerCase(){
+    this.searchCriteria.title = this.searchCriteria.title.toLowerCase();
+    this.searchCriteria.description = this.searchCriteria.description.toLowerCase();
+    this.searchCriteria.actors = this.searchCriteria.actors.toLowerCase();
+    this.searchCriteria.director = this.searchCriteria.director.toLowerCase();
+    this.searchCriteria.genre = this.searchCriteria.genre.toLowerCase();
   }
 }
