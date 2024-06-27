@@ -164,7 +164,19 @@ export class MovieDetailsComponent {
       // Handle cancellation logic if needed
     } else {
       console.log('Dialog closed with result: ', result);
-      // Handle submission logic based on result (selectedOption)
+      let movie_param = []
+      movie_param.push(this.movie?.director)
+      let combinedArray = movie_param.concat(this.movie?.actors);
+      let movie_param2 = combinedArray.concat(this.movie?.genre)
+      let searchCriteria = {
+          rating: result,
+          movie_param: movie_param2
+          //Add params if necessary(also need to change lambda)
+        };
+      this.movieService.createMovieReview(searchCriteria).subscribe({
+        next: (data: any) => {
+          console.log(data);
+        }});
     }
     });
   }
