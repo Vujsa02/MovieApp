@@ -36,7 +36,20 @@ export class MovieListComponent implements OnInit {
     //this.criteriaToLowerCase()
     console.log(this.searchCriteria);
     this.movieService.searchMovies(this.searchCriteria).subscribe((filteredMovies) => {
-      this.movies = filteredMovies;})
+      this.movies = filteredMovies;
+      this.filterEpisodes();
+    })
+
+  }
+
+  filterEpisodes(){
+    let no_episodes_movies : Movie[] = []
+    for (let movie of this.movies){
+        if (movie.episodeNumber == 0){
+          no_episodes_movies.push(movie)
+        }
+    }
+    this.movies = no_episodes_movies
   }
 
   resetMovies(){
