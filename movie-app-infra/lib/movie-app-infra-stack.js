@@ -85,6 +85,12 @@ class MovieAppInfraStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+  genresTable.addGlobalSecondaryIndex({
+      indexName: 'genre-index',
+      partitionKey: { name: 'genre', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     // DynamoDB table for reviews
     const reviewTable = new dynamodb.Table(this, 'ReviewTable', {
       partitionKey: { name: 'reviewId', type: dynamodb.AttributeType.STRING },
@@ -310,7 +316,8 @@ class MovieAppInfraStack extends cdk.Stack {
         `${movieTable.tableArn}/index/DescriptionIndex`,
         genresTable.tableArn,
         actorsTable.tableArn,
-        `${actorsTable.tableArn}/index/actor-index`, // Add actor-index here
+         `${actorsTable.tableArn}/index/actor-index`,
+        `${genresTable.tableArn}/index/genre-index`// Add actor-index here
       ],
     });
 
