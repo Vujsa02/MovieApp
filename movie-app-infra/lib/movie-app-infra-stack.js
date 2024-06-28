@@ -43,6 +43,26 @@ class MovieAppInfraStack extends cdk.Stack {
       ],
     });
 
+    const transcodeBucket = new s3.Bucket(this, 'TranscodeBucket', {
+      bucketName: "mmm-transcode-bucket",
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      versioned: true,
+      cors: [
+        {
+          allowedHeaders: ["*"],
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.PUT,
+            s3.HttpMethods.POST,
+            s3.HttpMethods.DELETE,
+          ],
+          allowedOrigins: ["http://localhost:4200"],
+          exposedHeaders: ["ETag"],
+          maxAge: 3000,
+        },
+      ],
+    });
+
     // DynamoDB table for metadata
     const movieTable = new dynamodb.Table(this, 'MovieTable', {
       partitionKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
@@ -257,6 +277,8 @@ class MovieAppInfraStack extends cdk.Stack {
       },
     });
 
+
+
     movieBucket.grantPut(uploadMovieLambda);
     movieTable.grantWriteData(uploadMovieLambda);
     genresTable.grantWriteData(uploadMovieLambda);
@@ -293,10 +315,12 @@ class MovieAppInfraStack extends cdk.Stack {
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
         INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
+        TRANSCODE_BUCKET_NAME: transcodeBucket.bucketName,
       },
     });
 
     movieBucket.grantRead(downloadMovieLambda);
+    transcodeBucket.grantRead(downloadMovieLambda);
 
     const queryMoviesBySeriesIdLambda = new lambda.Function(this, 'QueryMoviesBySeriesIdFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -367,11 +391,13 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'view_content.lambda_handler', // Adjust based on your lambda handler file
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
+        TRANSCODE_BUCKET_NAME: transcodeBucket.bucketName,
       },
     });
 
     // Grant permissions to access S3 bucket
     movieBucket.grantRead(viewContentLambda);
+    transcodeBucket.grantRead(viewContentLambda);
 
 
     const addReviewLambda = new lambda.Function(this, 'AddReviewFunction', {
@@ -571,9 +597,6 @@ class MovieAppInfraStack extends cdk.Stack {
     const seriesResource = api.root.addResource('episodes');
     const episodesByIdResource = seriesResource.addResource('{seriesId}');
     episodesByIdResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesBySeriesIdLambda));
-
-
-
 
 
 

@@ -16,27 +16,43 @@ export class MovieService {
 
   // Method to upload a movie with optional file content
   uploadMovie(movie: Movie, fileContent: string): Observable<any> {
-    let payload = this.createPayload(movie, fileContent);
+  let payload = this.createPayload(movie, fileContent);
 
-    return this.http.post<any>(environment.apiGatewayHost + 'movies', payload).pipe(
-      switchMap(response => {
-        const presignedUrl = response.presignedUrl;
-        if (presignedUrl) {
-          const byteArray = this.base64ToArrayBuffer(fileContent);
-          const blob = new Blob([byteArray], { type: 'video/mp4' });
+  return this.http.post<any>(`${environment.apiGatewayHost}/movies`, payload).pipe(
+    switchMap(response => {
+      const presignedUrl = response.presignedUrl;
+      const movieId = response.movieId;
+      if (presignedUrl) {
+        const byteArray = this.base64ToArrayBuffer(fileContent);
+        const blob = new Blob([byteArray], { type: 'video/mp4' });
 
-          // Upload the file to S3 using the presigned URL
-          return this.http.put(presignedUrl, blob, {
-            headers: {
-              'Content-Type': 'application/octet-stream'
-            }
-          });
-        } else {
-          return of({ message: 'Update successful without file upload' });
-        }
-      })
-    );
-  }
+        // Upload the file to S3 using the presigned URL
+        return this.http.put(presignedUrl, blob, {
+          headers: {
+            'Content-Type': 'application/octet-stream'
+          }
+        }).pipe(
+          switchMap(() => {
+            // Call the Lambda function to get 3 presigned URLs and byte arrays for different resolutions
+            const transcodePayload = {
+              movie_id: movieId,
+              file_content_base64: fileContent  // Base64 encoded file content
+            };
+
+            return this.http.post<any>(`${environment.transcodeUrl}`, transcodePayload
+          ).pipe(
+              switchMap(transcodeResponse => {
+                return of({ message: 'Transcoding job completed successfully' });
+              })
+            );
+          })
+        );
+      } else {
+        return of({ message: 'Update successful without file upload' });
+      }
+    })
+  );
+}
 
   // Method to update a movie with optional file content
   updateMovie(movie: Movie, fileContent: string): Observable<any> {
@@ -139,8 +155,8 @@ export class MovieService {
   }
 
   // Method to fetch movie streaming URL
-  getMovieStreamUrl(movieId: string): Observable<any> {
-    return this.http.get<any>(environment.apiGatewayHost + `movies/stream/${movieId}`);
+  getMovieStreamUrl(movieId: string, resolution: string): Observable<any> {
+    return this.http.get<any>(environment.apiGatewayHost + `movies/stream/${movieId}?resolution=${resolution}`);
   }
 
   // Method to search movies based on criteria

@@ -51,7 +51,6 @@ body {
   background-color: #fff;
   padding: 20px;
   border-radius: 8px;
-
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 .download-button {
@@ -69,6 +68,27 @@ body {
 }
 
 .download-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+
+.resolution-button {
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  /*padding: 10px 15px;*/
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:80px;
+  height:35px;
+  text-align: center;
+  margin-top: 20px;
+  margin-right:20px;
+  font-weight: bold;
+}
+
+.resolution-button:hover {
   background-color: #475bcb; /* Darker blue on hover */
 }
 

@@ -6,21 +6,27 @@ from botocore.exceptions import ClientError
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 movie_bucket = os.environ['MOVIE_BUCKET_NAME']
+transcode_bucket = os.environ['TRANSCODE_BUCKET_NAME']
 interactions_table = dynamodb.Table(os.environ['INTERACTIONS_TABLE_NAME'])
 
 
 def lambda_handler(event, context):
     movie_id = event['pathParameters']['movieId']
+    s3_key = f"{movie_id}"
+    print(s3_key)
 
-    s3_key = movie_id
-    # TODO: return all info about the movie
+    if movie_id.endswith('-480p') or movie_id.endswith('-720p') or movie_id.endswith('-360p'):
+        bucket_name = transcode_bucket
+    else:
+        bucket_name = movie_bucket
+    print(bucket_name)
     info = json.loads(event['queryStringParameters']['info'])
     username = event['queryStringParameters']['username']
     print('User:', username)
     print('Info:', info)
 
     try:
-        presigned_url = s3.generate_presigned_url('get_object', Params={'Bucket': movie_bucket, 'Key': s3_key}, ExpiresIn=3600)
+        presigned_url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': s3_key}, ExpiresIn=3600)
 
         response = interactions_table.get_item(Key={'userId': username})
         if 'Item' in response:

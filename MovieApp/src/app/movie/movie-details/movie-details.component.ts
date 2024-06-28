@@ -33,6 +33,7 @@ export class MovieDetailsComponent {
   public adminIs = false;
   currentEpisode: Movie | undefined;
   @ViewChild('videoPlayer') videoPlayer: ElementRef | undefined;
+  public resolution: string = '480p'
   constructor(private movieService: MovieService,
               private awsCognitoService: AwsCognitoService,
               private router: Router,
@@ -90,7 +91,7 @@ export class MovieDetailsComponent {
 
   watchVideo() {
     if (this.currentEpisode) {
-      this.movieService.getMovieStreamUrl(this.currentEpisode.movieId).subscribe({
+      this.movieService.getMovieStreamUrl(this.currentEpisode.movieId, this.resolution).subscribe({
         next: (data: any) => {
           const videoUrl = data.presignedUrl; // Assuming the API returns the streaming URL
           console.log(videoUrl)
@@ -104,7 +105,7 @@ export class MovieDetailsComponent {
         }
       });
     }else if(this.movie){
-      this.movieService.getMovieStreamUrl(this.movie!.movieId).subscribe({
+      this.movieService.getMovieStreamUrl(this.movie!.movieId, this.resolution).subscribe({
         next: (data: any) => {
           const videoUrl = data.presignedUrl; // Assuming the API returns the streaming URL
           console.log(videoUrl)
@@ -130,9 +131,16 @@ export class MovieDetailsComponent {
     for (const genre of this.movie!.genre) {
       movieInfo.push(genre);
     }
-
-    // Implement your download logic here
-    this.movieService.getPresignedUrl(this.movie!.movieId, movieInfo).subscribe(response => {
+    let movieId: string = '';
+    if (this.currentEpisode){
+      movieId = this.currentEpisode.movieId;
+    }else{
+      movieId = this.movie!.movieId;
+    }
+    if(this.resolution != ''){
+      movieId = `${movieId}-${this.resolution}`
+    }
+    this.movieService.getPresignedUrl(movieId, movieInfo).subscribe(response => {
       const presignedUrl = response.presigned_url;
       window.open(presignedUrl, '_blank');
     }, error => {
@@ -196,6 +204,10 @@ export class MovieDetailsComponent {
     });
   }
 
+  setResolution(resolution: string){
+    this.resolution = resolution;
+    this.watchVideo();
+  }
   openUploadEpisode(){
     this.router.navigate([`/upload/episode/${this.movie?.movieId}/${this.movie?.createdAt}`])
   }
