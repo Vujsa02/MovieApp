@@ -16,8 +16,6 @@ const eventSources = require('aws-cdk-lib/aws-lambda-event-sources');
 const sources = require('aws-cdk-lib/aws-lambda-event-sources');
 const destinations = require('aws-cdk-lib/aws-lambda-destinations');
 const { Stack } = cdk;
-const { WebSocketApi, WebSocketStage, WebSocketIntegration} = require('aws-cdk-lib/aws-apigatewayv2');
-const { WebSocketLambdaIntegration } = require('@aws-cdk/aws-apigatewayv2-integrations-alpha');
 const {IntegrationType} = require("aws-cdk-lib/aws-apigateway");
 
 class MovieAppInfraStack extends cdk.Stack {
@@ -181,6 +179,39 @@ class MovieAppInfraStack extends cdk.Stack {
         },
       },
     });
+
+    const adminGroup = new cognito.CfnUserPoolGroup(this, 'AdminGroup', {
+      userPoolId: userPool.userPoolId,
+      groupName: 'admin',
+      description: 'Admin group',
+    });
+
+    const userGroup = new cognito.CfnUserPoolGroup(this, 'UserGroup', {
+      userPoolId: userPool.userPoolId,
+      groupName: 'user',
+      description: 'User group',
+    });
+
+    // Create IAM roles for each group
+    const adminRole = new iam.Role(this, 'AdminRole', {
+      assumedBy: new iam.FederatedPrincipal('cognito-identity.amazonaws.com', {
+        'StringEquals': { 'cognito-identity.amazonaws.com:aud': userPool.userPoolId },
+        'ForAnyValue:StringLike': { 'cognito-identity.amazonaws.com:amr': 'authenticated' },
+      }, 'sts:AssumeRoleWithWebIdentity'),
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
+    });
+
+    const userRole = new iam.Role(this, 'UserRole', {
+      assumedBy: new iam.FederatedPrincipal('cognito-identity.amazonaws.com', {
+        'StringEquals': { 'cognito-identity.amazonaws.com:aud': userPool.userPoolId },
+        'ForAnyValue:StringLike': { 'cognito-identity.amazonaws.com:amr': 'authenticated' },
+      }, 'sts:AssumeRoleWithWebIdentity'),
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonS3ReadOnlyAccess')],
+    });
+
+    // Attach roles to groups
+    adminGroup.roleArn = adminRole.roleArn;
+    userGroup.roleArn = userRole.roleArn;
 
     // App Client
     const userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
@@ -472,6 +503,23 @@ class MovieAppInfraStack extends cdk.Stack {
       retryAttempts: 10,
     }));
 
+    const addUserToGroupLambda = new lambda.Function(this, 'AddUserToGroupFunction', {
+    runtime: lambda.Runtime.PYTHON_3_9,
+    code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+    handler: 'add_user_to_group.lambda_handler',
+    environment: {
+      USER_POOL_ID: userPool.userPoolId,
+    },
+  });
+
+  addUserToGroupLambda.addToRolePolicy(new iam.PolicyStatement({
+    actions: ['cognito-idp:AdminAddUserToGroup'],
+    resources: [userPool.userPoolArn],
+  }));
+
+  // Add a new API Gateway endpoint for the addUserToGroupLambda
+
+
 
 
     // API Gateway
@@ -479,6 +527,9 @@ class MovieAppInfraStack extends cdk.Stack {
       restApiName: 'Movie Service',
       description: 'This service serves movies.',
     });
+
+    const userGroupResource = api.root.addResource('user-group');
+    userGroupResource.addMethod('POST', new apigateway.LambdaIntegration(addUserToGroupLambda));
 
     const moviesResource = api.root.addResource('movies');
     moviesResource.addMethod('POST', new apigateway.LambdaIntegration(uploadMovieLambda));

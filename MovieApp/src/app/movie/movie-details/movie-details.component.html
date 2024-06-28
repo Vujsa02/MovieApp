@@ -13,7 +13,7 @@
     </div>
     <div *ngIf="movie" class="side-by-side">
         <button class="download-button" (click)="downloadMovie()">Download movie</button>
-        <button class="download-button" (click)="openReviewDialog()">Add your review</button>
+        <button *ngIf="!adminIs" class="download-button" (click)="openReviewDialog()">Add your review</button>
       <button *ngIf="movie.fileName == ''" class="download-button" (click)="openUploadEpisode()">Upload episode</button>
     </div>
   </div>
@@ -28,8 +28,8 @@
     <p class="movie-director"><strong>Director:   </strong>{{movie?.director}}</p>
 
     <div class="button-container">
-      <button class="update-button" (click)="updateMovie()">Edit</button>
-      <button *ngIf="episodes.length == 0" class="delete-button" (click)="deleteMovie()">Delete</button>
+      <button *ngIf="adminIs" class="update-button" (click)="updateMovie()">Edit</button>
+      <button  *ngIf="episodes.length == 0 && adminIs" class="delete-button" (click)="deleteMovie()">Delete</button>
     </div>
   </div>
 </div>
@@ -40,7 +40,7 @@
       <div class="image-container">
       <img [src]="getImageSrc()" alt="Movie Image" class="movie-image">
       <button class="episode-button" (click)="chooseEpisode(episode)">Watch episode</button>
-      <button class="edit-button" (click)="editEpisode(episode)">Edit episode</button>
+      <button *ngIf="adminIs" class="edit-button" (click)="editEpisode(episode)">Edit episode</button>
     </div>
       <span class="title">{{episode.title}}</span>
 
