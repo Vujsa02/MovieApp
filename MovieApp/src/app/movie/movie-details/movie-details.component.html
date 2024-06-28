@@ -16,7 +16,11 @@
     <div *ngIf="movie" class="side-by-side">
         <button class="download-button" (click)="downloadMovie()">Download movie</button>
         <button *ngIf="!adminIs" class="download-button" (click)="openReviewDialog()">Add your review</button>
-      <button *ngIf="movie.fileName == '' && adminIs" class="download-button" (click)="openUploadEpisode()">Upload episode</button>
+        <button *ngIf="movie.fileName == '' && adminIs" class="download-button" (click)="openUploadEpisode()">Upload episode</button>
+        <button class="resolution-button" (click)="setResolution('720p')">720p</button>
+        <button class="resolution-button" (click)="setResolution('480p')">480p</button>
+        <button class="resolution-button" (click)="setResolution('360p')">360p</button>
+        <button class="resolution-button" (click)="setResolution('')">Original</button>
     </div>
   </div>
 

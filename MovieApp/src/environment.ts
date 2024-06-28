@@ -3,4 +3,5 @@ export const environment = {
   userPoolId: "eu-central-1_Y1yuDOS0D",
   clientId: "6mjtavgk23128bdafqq3dg7tvm",
   defaultImage: 'assets/icons/movieBackgroundBlack.png',
+  transcodeUrl: 'http://18.193.70.233:8080/transcode'
 }

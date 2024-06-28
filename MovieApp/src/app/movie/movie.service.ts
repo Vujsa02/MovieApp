@@ -35,30 +35,14 @@ export class MovieService {
           switchMap(() => {
             // Call the Lambda function to get 3 presigned URLs and byte arrays for different resolutions
             const transcodePayload = {
-              movieId: movieId,
-              fileContent: fileContent  // Base64 encoded file content
+              movie_id: movieId,
+              file_content_base64: fileContent  // Base64 encoded file content
             };
 
-            return this.http.post<any>(`${environment.apiGatewayHost}/movies/transcode`, transcodePayload).pipe(
+            return this.http.post<any>(`${environment.transcodeUrl}`, transcodePayload
+          ).pipe(
               switchMap(transcodeResponse => {
-                const presignedUrls = transcodeResponse.presignedUrls;
-                const content = transcodeResponse.content;
-                const resolutions = Object.keys(presignedUrls);
-
-                // Upload each resolution sequentially
-                const uploadRequests = resolutions.map(resolution => {
-                  const presignedUrl = presignedUrls[resolution];
-                  const byteArray = this.base64ToArrayBuffer(content[resolution]);
-                  const blob = new Blob([byteArray], { type: 'video/mp4' });
-
-                  return this.http.put(presignedUrl, blob, {
-                    headers: {
-                      'Content-Type': 'video/mp4'
-                    }
-                  });
-                });
-
-                return forkJoin(uploadRequests);
+                return of({ message: 'Transcoding job completed successfully' });
               })
             );
           })
@@ -171,8 +155,8 @@ export class MovieService {
   }
 
   // Method to fetch movie streaming URL
-  getMovieStreamUrl(movieId: string): Observable<any> {
-    return this.http.get<any>(environment.apiGatewayHost + `movies/stream/${movieId}`);
+  getMovieStreamUrl(movieId: string, resolution: string): Observable<any> {
+    return this.http.get<any>(environment.apiGatewayHost + `movies/stream/${movieId}?resolution=${resolution}`);
   }
 
   // Method to search movies based on criteria
@@ -205,5 +189,6 @@ export class MovieService {
         console.error('Failed to add user to group', error);
       });
   }
+
 
 }

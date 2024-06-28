@@ -278,19 +278,6 @@ class MovieAppInfraStack extends cdk.Stack {
     });
 
 
-    const transcodeContentLambda = new lambda.Function(this, 'TranscodeContentLambda', {
-      runtime: lambda.Runtime.PYTHON_3_9,
-      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
-      handler: 'transcode_content.lambda_handler',
-      environment: {
-        TRANSCODE_BUCKET_NAME: transcodeBucket.bucketName,
-      },
-      timeout: cdk.Duration.minutes(5),
-    });
-
-
-    transcodeBucket.grantReadWrite(transcodeContentLambda);
-
 
     movieBucket.grantPut(uploadMovieLambda);
     movieTable.grantWriteData(uploadMovieLambda);
@@ -328,10 +315,12 @@ class MovieAppInfraStack extends cdk.Stack {
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
         INTERACTIONS_TABLE_NAME: userInteractionsTable.tableName,
+        TRANSCODE_BUCKET_NAME: transcodeBucket.bucketName,
       },
     });
 
     movieBucket.grantRead(downloadMovieLambda);
+    transcodeBucket.grantRead(downloadMovieLambda);
 
     const queryMoviesBySeriesIdLambda = new lambda.Function(this, 'QueryMoviesBySeriesIdFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -373,6 +362,18 @@ class MovieAppInfraStack extends cdk.Stack {
     movieTable.grantReadData(getMoviesMetadataLambda);
     userFeedTable.grantReadData(getMoviesMetadataLambda);
 
+    // Get sub Lambda function
+      const getSubscriptionLambda = new lambda.Function(this, 'GetSubscriptionFunction', {
+        runtime: lambda.Runtime.PYTHON_3_9,
+        code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+        handler: 'get_subscription.lambda_handler',
+        environment: {
+          SUBSCRIPTION_TABLE_NAME: subscriptionTable.tableName,
+        },
+      });
+
+      subscriptionTable.grantReadData(getSubscriptionLambda);
+
     const getMovieMetadataByIdLambda = new lambda.Function(this, 'GetMovieMetadataByIdFunction', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
@@ -396,6 +397,7 @@ class MovieAppInfraStack extends cdk.Stack {
 
     // Grant permissions to access S3 bucket
     movieBucket.grantRead(viewContentLambda);
+    transcodeBucket.grantRead(viewContentLambda);
 
 
     const addReviewLambda = new lambda.Function(this, 'AddReviewFunction', {
@@ -590,14 +592,11 @@ class MovieAppInfraStack extends cdk.Stack {
 
     const subscribeResource = api.root.addResource('subscribe');
     subscribeResource.addMethod('PUT', new apigateway.LambdaIntegration(subscribeLambda));
+    subscribeResource.addMethod('GET', new apigateway.LambdaIntegration(getSubscriptionLambda));
 
     const seriesResource = api.root.addResource('episodes');
     const episodesByIdResource = seriesResource.addResource('{seriesId}');
     episodesByIdResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesBySeriesIdLambda));
-
-
-    const transcodeIntegration = new apigateway.LambdaIntegration(transcodeContentLambda);
-    moviesResource.addResource('transcode').addMethod('POST', transcodeIntegration);
 
 
 

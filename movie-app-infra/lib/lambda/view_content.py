@@ -9,21 +9,20 @@ transcode_bucket = os.environ['TRANSCODE_BUCKET_NAME']
 
 def lambda_handler(event, context):
     movie_id = event['pathParameters']['movieId']  # Assuming the movie ID is passed in the path
-    resolution = event['pathParameters'].get('resolution',
-                                             'original')  # Default to 'original' if resolution not specified
+    resolution = event['queryStringParameters']['resolution']  # Default to 'original' if resolution not specified
 
     # Construct the S3 key based on resolution
-    if resolution == 'original':
+    if resolution == '':
         s3_bucket = movie_bucket
         s3_key = movie_id
     else:
         s3_bucket = transcode_bucket
-        s3_key = f"{movie_id}/{resolution}.mp4"
+        s3_key = f"{movie_id}-{resolution}"
 
     try:
         # Generate presigned URL for accessing the movie file from the selected bucket
         presigned_url = s3.generate_presigned_url(
-            'put_object' if resolution == 'original' else 'get_object',
+            'get_object',
             Params={'Bucket': s3_bucket, 'Key': s3_key},
             ExpiresIn=3600  # URL expiry time in seconds, adjust as needed
         )
