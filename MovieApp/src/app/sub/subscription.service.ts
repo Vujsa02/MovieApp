@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import {HttpClient, HttpHeaders, HttpErrorResponse, HttpParams} from '@angular/common/http';
 import { environment } from '../../environment';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -39,5 +39,10 @@ export class SubscriptionService {
       errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
     }
     return throwError(errorMessage);
+  }
+
+  getSubscriptions(email: string) {
+    let params = new HttpParams().set('email', email);
+    return this.http.get<any>(environment.apiGatewayHost + 'subscribe', {params: params});
   }
 }
