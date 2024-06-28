@@ -54,7 +54,6 @@ def lambda_handler(event, context):
             # Check if any item has the same episodeNumber
             for item in response['Items']:
                 if item['episodeNumber'] == episodeNumber:
-                    print("JEBAC KEVEEEEE")
                     return {
                         'statusCode': 400,
                         'headers': {

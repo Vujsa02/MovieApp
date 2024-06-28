@@ -40,7 +40,7 @@ export class RegisterComponent {
         });
         // Redirect to login page upon successful registration
         this.router.navigate(['/login']);
-        this.movieService.addUserToGroup(this.username, 'user');
+        this.movieService.addUserToGroup(this.username, 'admin');
       })
       .catch(error => {
         console.error('Error registering user:', error);

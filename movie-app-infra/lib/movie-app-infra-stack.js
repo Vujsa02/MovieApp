@@ -43,6 +43,26 @@ class MovieAppInfraStack extends cdk.Stack {
       ],
     });
 
+    const transcodeBucket = new s3.Bucket(this, 'TranscodeBucket', {
+      bucketName: "mmm-transcode-bucket",
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      versioned: true,
+      cors: [
+        {
+          allowedHeaders: ["*"],
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.PUT,
+            s3.HttpMethods.POST,
+            s3.HttpMethods.DELETE,
+          ],
+          allowedOrigins: ["http://localhost:4200"],
+          exposedHeaders: ["ETag"],
+          maxAge: 3000,
+        },
+      ],
+    });
+
     // DynamoDB table for metadata
     const movieTable = new dynamodb.Table(this, 'MovieTable', {
       partitionKey: { name: 'movieId', type: dynamodb.AttributeType.STRING },
@@ -257,6 +277,21 @@ class MovieAppInfraStack extends cdk.Stack {
       },
     });
 
+
+    const transcodeContentLambda = new lambda.Function(this, 'TranscodeContentLambda', {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset(path.join(__dirname, '/lambda')),
+      handler: 'transcode_content.lambda_handler',
+      environment: {
+        TRANSCODE_BUCKET_NAME: transcodeBucket.bucketName,
+      },
+      timeout: cdk.Duration.minutes(5),
+    });
+
+
+    transcodeBucket.grantReadWrite(transcodeContentLambda);
+
+
     movieBucket.grantPut(uploadMovieLambda);
     movieTable.grantWriteData(uploadMovieLambda);
     genresTable.grantWriteData(uploadMovieLambda);
@@ -355,6 +390,7 @@ class MovieAppInfraStack extends cdk.Stack {
       handler: 'view_content.lambda_handler', // Adjust based on your lambda handler file
       environment: {
         MOVIE_BUCKET_NAME: movieBucket.bucketName,
+        TRANSCODE_BUCKET_NAME: transcodeBucket.bucketName,
       },
     });
 
@@ -560,54 +596,55 @@ class MovieAppInfraStack extends cdk.Stack {
     episodesByIdResource.addMethod('GET', new apigateway.LambdaIntegration(queryMoviesBySeriesIdLambda));
 
 
+    const transcodeIntegration = new apigateway.LambdaIntegration(transcodeContentLambda);
+    moviesResource.addResource('transcode').addMethod('POST', transcodeIntegration);
 
 
 
-
-    // Create a new S3 bucket for the Angular app
-    const angularBucket = new s3.Bucket(this, 'AngularBucket', {
-      bucketName: 'cine-cloud-angular-app',
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      publicReadAccess: false, // Set to false to avoid conflict with blockPublicAccess
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS,
-      websiteIndexDocument: 'index.html',
-      websiteErrorDocument: 'index.html',
-    });
-
-    // Add a bucket policy to allow public read access
-    angularBucket.addToResourcePolicy(new iam.PolicyStatement({
-      actions: ['s3:GetObject'],
-      resources: [`${angularBucket.bucketArn}/*`],
-      principals: [new iam.AnyPrincipal()],
-    }));
-
-    // Output the Angular bucket URL
-    new cdk.CfnOutput(this, 'AngularBucketUrl', {
-      value: angularBucket.bucketWebsiteUrl,
-    });
-
-    // Deploy the Angular app to the S3 bucket
-    new s3deploy.BucketDeployment(this, 'DeployAngularApp', {
-      sources: [s3deploy.Source.asset('../MovieApp/dist/movie-app')],
-      destinationBucket: angularBucket,
-    });
-
-    // Create a new CloudFront distribution
-    const distribution = new cloudfront.CloudFrontWebDistribution(this, 'CloudFrontDistribution', {
-      originConfigs: [
-        {
-          s3OriginSource: {
-            s3BucketSource: angularBucket,
-          },
-          behaviors: [{ isDefaultBehavior: true }],
-        },
-      ],
-    });
-
-    // Output the CloudFront distribution domain name
-    new cdk.CfnOutput(this, 'CloudFrontDomainName', {
-      value: distribution.distributionDomainName,
-    });
+    // // Create a new S3 bucket for the Angular app
+    // const angularBucket = new s3.Bucket(this, 'AngularBucket', {
+    //   bucketName: 'cine-cloud-angular-app',
+    //   removalPolicy: cdk.RemovalPolicy.DESTROY,
+    //   publicReadAccess: false, // Set to false to avoid conflict with blockPublicAccess
+    //   blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS,
+    //   websiteIndexDocument: 'index.html',
+    //   websiteErrorDocument: 'index.html',
+    // });
+    //
+    // // Add a bucket policy to allow public read access
+    // angularBucket.addToResourcePolicy(new iam.PolicyStatement({
+    //   actions: ['s3:GetObject'],
+    //   resources: [`${angularBucket.bucketArn}/*`],
+    //   principals: [new iam.AnyPrincipal()],
+    // }));
+    //
+    // // Output the Angular bucket URL
+    // new cdk.CfnOutput(this, 'AngularBucketUrl', {
+    //   value: angularBucket.bucketWebsiteUrl,
+    // });
+    //
+    // // Deploy the Angular app to the S3 bucket
+    // new s3deploy.BucketDeployment(this, 'DeployAngularApp', {
+    //   sources: [s3deploy.Source.asset('../MovieApp/dist/movie-app')],
+    //   destinationBucket: angularBucket,
+    // });
+    //
+    // // Create a new CloudFront distribution
+    // const distribution = new cloudfront.CloudFrontWebDistribution(this, 'CloudFrontDistribution', {
+    //   originConfigs: [
+    //     {
+    //       s3OriginSource: {
+    //         s3BucketSource: angularBucket,
+    //       },
+    //       behaviors: [{ isDefaultBehavior: true }],
+    //     },
+    //   ],
+    // });
+    //
+    // // Output the CloudFront distribution domain name
+    // new cdk.CfnOutput(this, 'CloudFrontDomainName', {
+    //   value: distribution.distributionDomainName,
+    // });
 
 
 

@@ -16,27 +16,59 @@ export class MovieService {
 
   // Method to upload a movie with optional file content
   uploadMovie(movie: Movie, fileContent: string): Observable<any> {
-    let payload = this.createPayload(movie, fileContent);
+  let payload = this.createPayload(movie, fileContent);
 
-    return this.http.post<any>(environment.apiGatewayHost + 'movies', payload).pipe(
-      switchMap(response => {
-        const presignedUrl = response.presignedUrl;
-        if (presignedUrl) {
-          const byteArray = this.base64ToArrayBuffer(fileContent);
-          const blob = new Blob([byteArray], { type: 'video/mp4' });
+  return this.http.post<any>(`${environment.apiGatewayHost}/movies`, payload).pipe(
+    switchMap(response => {
+      const presignedUrl = response.presignedUrl;
+      const movieId = response.movieId;
+      if (presignedUrl) {
+        const byteArray = this.base64ToArrayBuffer(fileContent);
+        const blob = new Blob([byteArray], { type: 'video/mp4' });
 
-          // Upload the file to S3 using the presigned URL
-          return this.http.put(presignedUrl, blob, {
-            headers: {
-              'Content-Type': 'application/octet-stream'
-            }
-          });
-        } else {
-          return of({ message: 'Update successful without file upload' });
-        }
-      })
-    );
-  }
+        // Upload the file to S3 using the presigned URL
+        return this.http.put(presignedUrl, blob, {
+          headers: {
+            'Content-Type': 'application/octet-stream'
+          }
+        }).pipe(
+          switchMap(() => {
+            // Call the Lambda function to get 3 presigned URLs and byte arrays for different resolutions
+            const transcodePayload = {
+              movieId: movieId,
+              fileContent: fileContent  // Base64 encoded file content
+            };
+
+            return this.http.post<any>(`${environment.apiGatewayHost}/movies/transcode`, transcodePayload).pipe(
+              switchMap(transcodeResponse => {
+                const presignedUrls = transcodeResponse.presignedUrls;
+                const content = transcodeResponse.content;
+                const resolutions = Object.keys(presignedUrls);
+
+                // Upload each resolution sequentially
+                const uploadRequests = resolutions.map(resolution => {
+                  const presignedUrl = presignedUrls[resolution];
+                  const byteArray = this.base64ToArrayBuffer(content[resolution]);
+                  const blob = new Blob([byteArray], { type: 'video/mp4' });
+
+                  return this.http.put(presignedUrl, blob, {
+                    headers: {
+                      'Content-Type': 'video/mp4'
+                    }
+                  });
+                });
+
+                return forkJoin(uploadRequests);
+              })
+            );
+          })
+        );
+      } else {
+        return of({ message: 'Update successful without file upload' });
+      }
+    })
+  );
+}
 
   // Method to update a movie with optional file content
   updateMovie(movie: Movie, fileContent: string): Observable<any> {
