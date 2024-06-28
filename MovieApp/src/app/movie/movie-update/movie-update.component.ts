@@ -5,6 +5,7 @@ import {Genre, Movie} from "../movie-metadata.model";
 import {MovieService} from "../movie.service";
 import {ToastrService} from "ngx-toastr";
 import {ActivatedRoute, Router} from "@angular/router";
+import {LayoutModule} from "../../layout/layout.module";
 
 @Component({
   selector: 'app-movie-update',
@@ -12,7 +13,8 @@ import {ActivatedRoute, Router} from "@angular/router";
   imports: [
     FormsModule,
     NgForOf,
-    NgIf
+    NgIf,
+    LayoutModule
   ],
   templateUrl: './movie-update.component.html',
   styleUrl: './movie-update.component.css'

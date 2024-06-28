@@ -1,29 +1,30 @@
-import {Component, OnInit} from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
-import {AwsCognitoService} from "../../auth/aws-cognito.service";
-import {ToastrService} from "ngx-toastr";
+import { AwsCognitoService } from '../../auth/aws-cognito.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'] // use styleUrls instead of styleUrl
 })
-export class NavbarComponent  implements OnInit{
-  public adminIs = false;
+export class NavbarComponent implements OnInit {
+  adminIs: boolean = false;
+
   constructor(
     private awsCognitoService: AwsCognitoService,
     private router: Router,
     private toastr: ToastrService,
+    private cdr: ChangeDetectorRef
   ) {}
 
-  async ngOnInit() {
-       await this.isAdmin();
-    }
+  ngOnInit() {
+    this.isAdmin();
+  }
 
   isLoggedIn(): boolean {
     return this.awsCognitoService.isLoggedIn();
   }
-
 
   logout(): void {
     this.awsCognitoService.logout();
@@ -31,26 +32,21 @@ export class NavbarComponent  implements OnInit{
     this.toastr.success('Logged out successfully', 'Success', {
       timeOut: 5000
     });
-
   }
 
   navigateToHome() {
     this.router.navigate(['/home']);
   }
 
-async isAdmin(){
-  try {
-    let groups = await this.awsCognitoService.getUserGroups();
-    console.log(groups);
-    if (groups.includes("admin")) {
-      console.log("User is an admin.");
-      this.adminIs = true;
-    } else {
-      console.log("User is not an admin.");
-      this.adminIs = false; // Ensure to set this to false if the user is not an admin
+  async isAdmin() {
+    try {
+      let groups = await this.awsCognitoService.getUserGroups();
+      console.log(groups);
+      this.adminIs = groups.includes("admin");
+      console.log(this.adminIs ? "User is an admin." : "User is not an admin.");
+      this.cdr.detectChanges(); // Trigger change detection
+    } catch (error) {
+      console.error('Error fetching user groups:', error);
     }
-  } catch (error) {
-    console.error('Error fetching user groups:', error);
   }
-}
 }

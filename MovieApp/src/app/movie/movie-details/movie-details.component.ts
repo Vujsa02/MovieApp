@@ -12,6 +12,7 @@ import {ReviewDialogComponent} from "../../dialogs/review-dialog/review-dialog.c
 import {MovieCardComponent} from "../movie-card/movie-card.component";
 import {MatCard} from "@angular/material/card";
 import {AwsCognitoService} from "../../auth/aws-cognito.service";
+import {LayoutModule} from "../../layout/layout.module";
 @Component({
   selector: 'app-movie-details',
   standalone: true,
@@ -20,7 +21,8 @@ import {AwsCognitoService} from "../../auth/aws-cognito.service";
     CommonModule,
     NgOptimizedImage,
     MovieCardComponent,
-    MatCard
+    MatCard,
+    LayoutModule
   ],
   templateUrl: './movie-details.component.html',
   styleUrl: './movie-details.component.css'

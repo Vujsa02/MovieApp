@@ -561,29 +561,44 @@ class MovieAppInfraStack extends cdk.Stack {
 
 
 
-  //   // CloudFront distribution for Angular app
-  //   const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MovieAppDistribution', {
-  //     originConfigs: [
-  //       {
-  //         s3OriginSource: {
-  //           s3BucketSource: movieBucket,
-  //         },
-  //         behaviors: [{ isDefaultBehavior: true }],
-  //       },
-  //     ],
-  //   });
-  //
-  //   // Deploy Angular app to S3 and invalidate CloudFront cache
-  //   new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-  //     sources: [s3deploy.Source.asset('../MovieApp/dist/booking-app')],
-  //     destinationBucket: movieBucket,
-  //     distribution,
-  //     distributionPaths: ['/*'],
-  //   });
-  //
-  //   new cdk.CfnOutput(this, 'DistributionDomainName', {
-  //     value: distribution.distributionDomainName,
-  //   });
+    // // Create a new S3 bucket for the Angular app
+    // const angularBucket = new s3.Bucket(this, 'AngularBucket', {
+    //   bucketName: 'cine-cloud-angular-app',
+    //   removalPolicy: cdk.RemovalPolicy.DESTROY,
+    //   publicReadAccess: true,
+    //   websiteIndexDocument: 'index.html',
+    //   websiteErrorDocument: 'index.html',
+    // });
+    //
+    // // Output the Angular bucket URL
+    // new cdk.CfnOutput(this, 'AngularBucketUrl', {
+    //   value: angularBucket.bucketWebsiteUrl,
+    // });
+    //
+    // // Deploy the Angular app to the S3 bucket
+    // new s3deploy.BucketDeployment(this, 'DeployAngularApp', {
+    //   sources: [s3deploy.Source.asset('../../MovieApp/dist/movie-app')],
+    //   destinationBucket: angularBucket,
+    // });
+    //
+    // // Create a new CloudFront distribution
+    // const distribution = new cloudfront.CloudFrontWebDistribution(this, 'CloudFrontDistribution', {
+    //   originConfigs: [
+    //     {
+    //       s3OriginSource: {
+    //         s3BucketSource: angularBucket,
+    //       },
+    //       behaviors: [{ isDefaultBehavior: true }],
+    //     },
+    //   ],
+    // });
+    //
+    // // Output the CloudFront distribution domain name
+    // new cdk.CfnOutput(this, 'CloudFrontDomainName', {
+    //   value: distribution.distributionDomainName,
+    // });
+
+
   }
 }
 

@@ -6,15 +6,17 @@ import {Genre, Movie} from "../../movie/movie-metadata.model";
 import {MovieService} from "../../movie/movie.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {ToastrService} from "ngx-toastr";
+import {LayoutModule} from "../../layout/layout.module";
 
 @Component({
   selector: 'app-episode-upload',
   standalone: true,
-    imports: [
-        FormsModule,
-        MaterialModule,
-        NgForOf
-    ],
+  imports: [
+    FormsModule,
+    MaterialModule,
+    NgForOf,
+    LayoutModule
+  ],
   templateUrl: './episode-upload.component.html',
   styleUrl: './episode-upload.component.css'
 })

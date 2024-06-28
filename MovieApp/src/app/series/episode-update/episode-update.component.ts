@@ -8,6 +8,7 @@ import {ToastrService} from "ngx-toastr";
 import {ConfirmDeleteDialogComponent} from "../../dialogs/confirm-delete-dialog/confirm-delete-dialog.component";
 import {MatDialog} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
+import {LayoutModule} from "../../layout/layout.module";
 
 @Component({
   selector: 'app-episode-update',
@@ -16,7 +17,8 @@ import {MatIconModule} from "@angular/material/icon";
     FormsModule,
     NgForOf,
     NgIf,
-    MatIconModule
+    MatIconModule,
+    LayoutModule
   ],
   templateUrl: './episode-update.component.html',
   styleUrl: './episode-update.component.css'

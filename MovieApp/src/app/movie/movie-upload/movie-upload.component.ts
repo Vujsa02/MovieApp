@@ -6,12 +6,14 @@ import { NgForOf } from '@angular/common';
 import {ToastrModule, ToastrService} from "ngx-toastr";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {Router} from "@angular/router";
+import {LayoutModule} from "../../layout/layout.module";
 @Component({
   selector: 'app-movie-upload',
   standalone: true,
   imports: [
     FormsModule,
     NgForOf,
+    LayoutModule,
   ],
   templateUrl: './movie-upload.component.html',
   styleUrl: './movie-upload.component.css'
