@@ -164,4 +164,14 @@ export class MovieService {
     return this.http.post<any>(environment.apiGatewayHost + `reviews`, review, {params});
   }
 
+  addUserToGroup(username: string, groupName: string) {
+    const payload = { userName: username, group_name: groupName, poolId: environment.userPoolId};
+    this.http.post(environment.apiGatewayHost + '/user-group', payload)
+      .subscribe(response => {
+        console.log('User added to group successfully');
+      }, error => {
+        console.error('Failed to add user to group', error);
+      });
+  }
+
 }

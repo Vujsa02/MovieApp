@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
   CognitoUserPool,
   CognitoUserAttribute,
+  CognitoUserSession,
   CognitoUser,
   AuthenticationDetails,
 } from 'amazon-cognito-identity-js';
@@ -38,6 +39,7 @@ export class AwsCognitoService {
       });
     });
   }
+
 
   login(username: string, password: string) {
     const authenticationDetails = new AuthenticationDetails({
@@ -88,5 +90,23 @@ export class AwsCognitoService {
   getCurrentUsername(): string {
     const user = userPool.getCurrentUser();
     return user?.getUsername() || '';
+  }
+
+  getUserGroups(): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      const user = userPool.getCurrentUser();
+      if (user) {
+        user.getSession((err: any, session: CognitoUserSession) => {
+          if (err) {
+            reject(err);
+          } else {
+            const groups = session.getAccessToken().payload['cognito:groups'];
+            resolve(groups ? groups : []);
+          }
+        });
+      } else {
+        resolve([]);
+      }
+    });
   }
 }

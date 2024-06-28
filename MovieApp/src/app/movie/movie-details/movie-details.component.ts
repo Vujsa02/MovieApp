@@ -11,6 +11,8 @@ import {ConfirmDeleteDialogComponent} from "../../dialogs/confirm-delete-dialog/
 import {ReviewDialogComponent} from "../../dialogs/review-dialog/review-dialog.component";
 import {MovieCardComponent} from "../movie-card/movie-card.component";
 import {MatCard} from "@angular/material/card";
+import {AwsCognitoService} from "../../auth/aws-cognito.service";
+import {LayoutModule} from "../../layout/layout.module";
 @Component({
   selector: 'app-movie-details',
   standalone: true,
@@ -19,7 +21,8 @@ import {MatCard} from "@angular/material/card";
     CommonModule,
     NgOptimizedImage,
     MovieCardComponent,
-    MatCard
+    MatCard,
+    LayoutModule
   ],
   templateUrl: './movie-details.component.html',
   styleUrl: './movie-details.component.css'
@@ -27,16 +30,19 @@ import {MatCard} from "@angular/material/card";
 export class MovieDetailsComponent {
   @Input() movie: Movie | undefined;
   episodes: Movie[] = [];
+  public adminIs = false;
   currentEpisode: Movie | undefined;
   @ViewChild('videoPlayer') videoPlayer: ElementRef | undefined;
   constructor(private movieService: MovieService,
+              private awsCognitoService: AwsCognitoService,
               private router: Router,
               private route: ActivatedRoute,
               private cdr: ChangeDetectorRef,
               private toastr: ToastrService,
               public dialog: MatDialog) {}
 
-  ngOnInit() {
+  async ngOnInit() {
+    await this.isAdmin();
     this.route.params.subscribe((params) => {
       const movieId = params['movieId'];
       const createdAt = params['createdAt'];
@@ -208,4 +214,19 @@ export class MovieDetailsComponent {
     this.router.navigate([`update/episode/${episode?.movieId}/${episode?.createdAt}`])
   }
   protected readonly open = open;
-}
+
+  async isAdmin() {
+  try {
+    let groups = await this.awsCognitoService.getUserGroups();
+    console.log(groups);
+    if (groups.includes("admin")) {
+      console.log("User is an admin.");
+      this.adminIs = true;
+    } else {
+      console.log("User is not an admin.");
+      this.adminIs = false; // Ensure to set this to false if the user is not an admin
+    }
+  } catch (error) {
+    console.error('Error fetching user groups:', error);
+  }
+}}

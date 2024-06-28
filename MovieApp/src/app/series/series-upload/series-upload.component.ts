@@ -5,6 +5,7 @@ import {ToastrService} from "ngx-toastr";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {NgForOf} from "@angular/common";
 import {Router} from "@angular/router";
+import {LayoutModule} from "../../layout/layout.module";
 
 @Component({
   selector: 'app-series-upload',
@@ -12,7 +13,8 @@ import {Router} from "@angular/router";
   imports: [
     FormsModule,
     NgForOf,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    LayoutModule
   ],
   templateUrl: './series-upload.component.html',
   styleUrl: './series-upload.component.css'
