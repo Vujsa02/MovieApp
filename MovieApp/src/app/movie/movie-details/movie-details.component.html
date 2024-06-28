@@ -16,7 +16,7 @@
     <div *ngIf="movie" class="side-by-side">
         <button class="download-button" (click)="downloadMovie()">Download movie</button>
         <button *ngIf="!adminIs" class="download-button" (click)="openReviewDialog()">Add your review</button>
-      <button *ngIf="movie.fileName == ''" class="download-button" (click)="openUploadEpisode()">Upload episode</button>
+      <button *ngIf="movie.fileName == '' && adminIs" class="download-button" (click)="openUploadEpisode()">Upload episode</button>
     </div>
   </div>
 
