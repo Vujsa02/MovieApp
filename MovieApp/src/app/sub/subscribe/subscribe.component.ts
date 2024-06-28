@@ -26,18 +26,23 @@ export class SubscribeComponent implements OnInit{
       this.actors = this.movies.map(movie => movie.actors).flat().filter((actor, index, self) => self.indexOf(actor) === index);
       this.directors = this.movies.map(movie => movie.director).filter((director, index, self) => self.indexOf(director) === index);
       this.genres = Object.values(Genre);
+      this.subscriptionService.getSubscriptions(this.cognitoService.getCurrentUserEmail()).subscribe((subscriptions) => {
+        this.selectedItems = subscriptions;
+        this.setSelectedItems();
+      });
     });
   }
 
   movies: Movie[] = [];
+  selectedItems: string[] = []
 
   actors: string[] = [];
   directors: string[] = [];
   genres: string[] = [];
 
-  selectedActors = [];
-  selectedDirectors = [];
-  selectedGenres = [];
+  selectedActors:string[] = [];
+  selectedDirectors:string[] = [];
+  selectedGenres:string[] = [];
 
   actorFilter = '';
   directorFilter = '';
@@ -90,6 +95,10 @@ export class SubscribeComponent implements OnInit{
     });
   }
 
-
+  setSelectedItems() {
+    this.selectedActors = this.selectedItems.filter(item => this.actors.includes(item));
+    this.selectedDirectors = this.selectedItems.filter(item => this.directors.includes(item));
+    this.selectedGenres = this.selectedItems.filter(item => this.genres.includes(item));
+  }
 
 }
