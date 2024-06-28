@@ -1,0 +1,54 @@
+mat-toolbar {
+  background-color: #3F51B5;
+}
+
+
+button {
+  margin-right: 10px;
+}
+
+span{
+  color: white;
+}
+
+.dark_font{
+  color : black;
+}
+
+#file-input {
+  display: none;
+}
+
+.file-input-container {
+  display: inline-block;
+}
+
+
+.nav-item {
+  background-color: #3F51B5;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: color 0.3s;
+  margin: 20px;
+  border-radius: 4px;
+}
+
+.nav-item:hover {
+  background-color: #536DFE; /* slightly brighter color on hover */
+}
+
+.title {
+  color: #3f3f3f;
+  margin: 15px; /* Space between the image and the text */
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Center items horizontally */
+  justify-content: center; /* Center items vertically */
+}

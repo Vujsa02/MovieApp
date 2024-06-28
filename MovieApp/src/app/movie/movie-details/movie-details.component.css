@@ -1,0 +1,253 @@
+body {
+    margin: 20px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    color: #333;
+}
+.parent {
+  display: flex;
+  justify-content: flex-end; /* Align children to the end (right) */
+  margin: 20px; /* Adjust as necessary */
+}
+
+.container {
+  width: 20%;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-left: auto; /* Push the container to the right */
+}
+
+.movie-title {
+    color: #3f3f3f;
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+.movie-description {
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+.movie-actors,
+.movie-genre,
+.movie-director,
+.movie-duration {
+    margin-bottom: 10px;
+}
+.movie-image {
+    width: 250px;
+    height: 350px;
+    border-radius: 8px;
+    display: block; /* Ensure the image is block-level */
+    margin: 0 auto 20px; /* Center align the image */
+}
+
+.video-container{
+  margin-right: 50px;
+  margin-left:20px;
+  width:90%;
+  height: 600px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.download-button {
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:200px;
+  margin-top: 20px;
+  margin-right:20px;
+  font-weight: bold;
+}
+
+.download-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+
+.resolution-button {
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  /*padding: 10px 15px;*/
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:80px;
+  height:35px;
+  text-align: center;
+  margin-top: 20px;
+  margin-right:20px;
+  font-weight: bold;
+}
+
+.resolution-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+.update-button {
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:120px;
+  font-weight: bold;
+}
+
+.update-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+.delete-button {
+  background-color: #bc544b; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  width:120px;
+  font-weight: bold;
+}
+
+.delete-button:hover {
+  background-color: #ce645a; /* Darker blue on hover */
+}
+
+
+
+.button-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  margin-bottom: 20px; /* Adjust for any bottom margin */
+}
+
+.button-container button {
+  margin: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.side-by-side {
+  margin: 20px;
+  display: flex;
+}
+
+.side-by-side-episode {
+  margin-left:auto;
+  margin-right: 60px;
+  display: flex;
+  justify-content: space-between;
+}
+/* movie-card.component.css */
+
+.icon-image {
+  width: 300px; /* Adjust size as needed */
+  height: auto; /* Maintain aspect ratio */
+  margin: 10px; /* Example margin */
+  transition: 0.3s ease-in-out; /* Smooth transition */
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center items horizontally */
+  justify-content: center; /* Center items vertically */
+  margin: 10px;
+}
+
+.title {
+  text-align: center; /* Center text within the span */
+  margin-top: 10px; /* Space between the image and the text */
+  font-size: 30px;
+  color: #3f3f3f;
+}
+
+.image-container {
+  position: relative;
+  width: fit-content;
+}
+
+.movie-image {
+    width: 200px;
+    height: 270px;
+    border-radius: 8px;
+    display: block; /* Ensure the image is block-level */
+    margin: 0 auto 20px; /* Center align the image */
+}
+
+.image-container:hover .icon-image {
+  opacity: 0.7; /* Tinted background effect */
+}
+
+.image-container:hover .episode-button {
+  display: block; /* Show the button on hover */
+}
+
+.image-container:hover .edit-button {
+  display: block; /* Show the button on hover */
+}
+
+.episode-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none; /* Hide the button by default */
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 20px;
+  width:150px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.episode-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+.edit-button {
+  position: absolute;
+  top: 80%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none; /* Hide the button by default */
+  background-color: #3F51B5; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  padding: 10px 20px;
+  width:150px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.edit-button:hover {
+  background-color: #475bcb; /* Darker blue on hover */
+}
+
+.series-title{
+  font-size: 23px;
+  margin-bottom: 10px;
+}
+
+.series-duration {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+

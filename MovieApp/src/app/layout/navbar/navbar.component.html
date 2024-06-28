@@ -1,0 +1,21 @@
+<mat-toolbar>
+  <img src="/assets/icons/cloudIcon.png" alt="Icon" class="icon-image" height="50" width="50" (click)="navigateToHome()">
+  <span style="font-size: 26px" (click)="navigateToHome()">Cine Cloud</span>
+  <div class="separator"></div>
+  <div style="margin-left: auto">
+    <ng-container *ngIf="!isLoggedIn(); else loggedInTemplate">
+      <a class="nav-item" routerLink="/login">Login</a>
+      <div class="separator"></div>
+      <a class="nav-item" routerLink="/register">Register</a>
+    </ng-container>
+    <ng-template #loggedInTemplate>
+      <a *ngIf="!adminIs" class="nav-item" routerLink="/subscribe">Subscription</a>
+      <div class="separator"></div>
+      <a class="nav-item" (click)="logout()">Logout</a>
+      <div class="separator"></div>
+      <a *ngIf="adminIs" class="nav-item" routerLink="/upload/movies">Upload movie</a>
+      <div *ngIf="adminIs" class="separator"></div>
+      <a *ngIf="adminIs" class="nav-item" routerLink="/upload/series">Upload series</a>
+    </ng-template>
+  </div>
+</mat-toolbar>

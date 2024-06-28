@@ -1,0 +1,28 @@
+/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+@import 'node_modules/ngx-toastr/toastr.css';
+/*body {*/
+/*  margin: 0;*/
+/*  padding: 0;*/
+/*  font-family: Algerian, 'Times New Roman', Times, serif;*/
+/*}*/
+/*button {*/
+/*  font-family: Algerian, 'Times New Roman', Times, serif;*/
+/*}*/
+
+/*input {*/
+/*  font-family: Algerian, 'Times New Roman', Times, serif;*/
+/*}*/
+
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Times New Roman", serif ;
+}
+*{
+  text-transform: uppercase;
+}
+input {
+  text-transform: none;
+}

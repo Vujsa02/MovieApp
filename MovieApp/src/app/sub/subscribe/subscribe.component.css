@@ -1,0 +1,51 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.lists {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.list-container {
+  margin: 10px;
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1, h2 {
+  text-align: center;
+}
+
+input {
+  margin-bottom: 10px;
+  padding: 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+mat-selection-list {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 40vh;
+  min-height: 40vh;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+button {
+  margin-top: 20px;
+  color: #fff;
+  background-color: #3f51b5;
+  padding: 2px;
+  border-radius: 4px;
+}

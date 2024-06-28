@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref MoviesTable
+
+Resources:
+  MoviesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MoviesTable
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  UploadMovieFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: upload-movie.handler
+      CodeUri: ../sam-movie-app/
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: post
+
+  DownloadMovieFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: download-movie.handler
+      CodeUri: ../sam-movie-app/
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /download/{id}
+            Method: get

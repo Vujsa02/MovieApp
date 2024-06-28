@@ -1,0 +1,50 @@
+<app-navbar></app-navbar>
+<div class="background">
+  <div class="title">
+    <h1>Upload Series</h1>
+  </div>
+
+  <form style="text-align: center" (ngSubmit)="onSubmit()" #movieForm="ngForm">
+    <div class="form-group side-by-side">
+      <div class="full-width">
+        <label for="title" class="label">Series Title:</label>
+        <input type="text" id="title" class="form-control" required [(ngModel)]="movie.title" name="title" #title="ngModel">
+      </div>
+      <div class="full-width">
+        <label for="director" class="label">Director:</label>
+        <input type="text" id="director" class="form-control" required [(ngModel)]="movie.director" name="director" #director="ngModel">
+      </div>
+    </div>
+
+
+    <div class="form-group">
+      <label for="description" class="label">Description:</label>
+      <textarea id="description" class="form-control" required [(ngModel)]="movie.description" name="description" #description="ngModel"></textarea>
+    </div>
+
+    <div class="form-group side-by-side">
+      <div class="full-width">
+        <label for="actors" class="label">Actors (comma separated):</label>
+        <input type="text" id="actors" class="form-control" required [(ngModel)]="movie.actors" name="actors" #actors="ngModel">
+      </div>
+
+      <div class="full-width">
+        <label class="label">Genre:</label>
+        <div class="checkbox-container">
+          <div *ngFor="let genre of genres" class="checkbox-wrapper">
+            <label class="checkbox-label">
+              <input type="checkbox" name="genre"  [value]="genre"> {{ genre }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="file-input-container">
+      <input type="file" id="image-input" (change)="onImageFileSelected($event)" hidden> <label for="image-input" class="nav-item">Choose Image</label>
+    </div>
+
+    <button type="submit" class="nav-item" [disabled]="!movieForm.form.valid">Submit</button>
+  </form>
+</div>
+
