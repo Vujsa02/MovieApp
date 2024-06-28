@@ -70,7 +70,22 @@ export class MovieService {
             headers: {
               'Content-Type': 'application/octet-stream'
             }
-          });
+          }).pipe(
+          switchMap(() => {
+            // Call the Lambda function to get 3 presigned URLs and byte arrays for different resolutions
+            const transcodePayload = {
+              movie_id: movie.movieId,
+              file_content_base64: fileContent  // Base64 encoded file content
+            };
+
+            return this.http.post<any>(`${environment.transcodeUrl}`, transcodePayload
+          ).pipe(
+              switchMap(transcodeResponse => {
+                return of({ message: 'Transcoding job completed successfully' });
+              })
+            );
+          })
+        );;
         } else {
           // If presignedUrl is empty, update episodes if fileName is empty
           if (movie.fileName === "") {
