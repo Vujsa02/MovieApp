@@ -3,6 +3,7 @@ import { AwsCognitoService } from '../aws-cognito.service';
 import { Router } from '@angular/router';
 import { NgForm } from '@angular/forms';
 import {ToastrService} from "ngx-toastr";
+import {MovieService} from "../../movie/movie.service";
 
 @Component({
   selector: 'app-register',
@@ -20,6 +21,7 @@ export class RegisterComponent {
 
   constructor(
     private awsCognitoService: AwsCognitoService,
+    private movieService: MovieService,
     private router: Router,
     private toastr: ToastrService
   ) {}
@@ -38,6 +40,7 @@ export class RegisterComponent {
         });
         // Redirect to login page upon successful registration
         this.router.navigate(['/login']);
+        this.movieService.addUserToGroup(this.username, 'user');
       })
       .catch(error => {
         console.error('Error registering user:', error);
@@ -47,6 +50,7 @@ export class RegisterComponent {
 
       });
   }
+
 
   validateForm(): boolean {
     // Basic validation, you can add more specific validation as needed

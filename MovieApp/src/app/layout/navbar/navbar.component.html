@@ -9,14 +9,13 @@
       <a class="nav-item" routerLink="/register">Register</a>
     </ng-container>
     <ng-template #loggedInTemplate>
-      <a class="nav-item" routerLink="/subscribe">Subscription</a>
+      <a *ngIf="!adminIs" class="nav-item" routerLink="/subscribe">Subscription</a>
       <div class="separator"></div>
       <a class="nav-item" (click)="logout()">Logout</a>
       <div class="separator"></div>
-      <a class="nav-item" routerLink="/upload/movies">Upload movie</a>
-      <div class="separator"></div>
-      <a class="nav-item" routerLink="/upload/series">Upload series</a>
-
+      <a *ngIf="adminIs" class="nav-item" routerLink="/upload/movies">Upload movie</a>
+      <div *ngIf="adminIs" class="separator"></div>
+      <a *ngIf="adminIs" class="nav-item" routerLink="/upload/series">Upload series</a>
     </ng-template>
   </div>
 </mat-toolbar>
