@@ -7,17 +7,17 @@ The infrastructure is designed to support a movie/series platform where users ca
 ## Prerequisites
 Before deploying the infrastructure, ensure you have the following:
 
-1. AWS CLI: Install and configure the AWS CLI with your credentials.
+AWS CLI: Install and configure the AWS CLI with your credentials.
 [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
 
-2. AWS CDK: Install the AWS CDK globally.
+AWS CDK: Install the AWS CDK globally.
 `npm install -g aws-cdk`
 
-3. Python: Ensure Python is installed as the Lambda functions are written in Python.
+Python: Ensure Python is installed as the Lambda functions are written in Python.
 [Download Python](https://www.python.org/downloads/)
 
-4. Node.js: Required for running the CDK scripts.
+Node.js: Required for running the CDK scripts.
 [Download Node.js](https://nodejs.org/en)
 
 AWS Account: You need an AWS account with sufficient permissions to create the resources.
